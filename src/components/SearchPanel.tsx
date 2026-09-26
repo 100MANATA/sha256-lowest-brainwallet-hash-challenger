@@ -1,0 +1,176 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { DEFAULT_CONFIG, type SearchConfig, type SearchMode } from "@/lib/miner-types";
+import type { MinerStatus } from "@/hooks/useMiner";
+
+const MODES: { value: SearchMode; label: string }[] = [
+  { value: "sequential", label: "Sequential" },
+  { value: "random", label: "Random" },
+  { value: "custom", label: "Custom" },
+];
+
+interface Props {
+  status: MinerStatus;
+  onStart: (config: SearchConfig, threads: number) => void;
+  onPause: () => void;
+  onResume: () => void;
+  onStop: () => void;
+}
+
+export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Props) {
+  const [config, setConfig] = useState<SearchConfig>(DEFAULT_CONFIG);
+  const [threads, setThreads] = useState(() =>
+    typeof navigator !== "undefined" ? Math.min(4, navigator.hardwareConcurrency ?? 4) : 4,
+  );
+
+  const set = <K extends keyof SearchConfig>(key: K, value: SearchConfig[K]) =>
+    setConfig((prev) => ({ ...prev, [key]: value }));
+
+  return (
+    <section className="panel p-5">
+      <h2 className="label-xs">Search engine</h2>
+
+      <div className="mt-4 space-y-4">
+        <div>
+          <Label className="label-xs">Mode</Label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {MODES.map((m) => (
+              <Button
+                key={m.value}
+                type="button"
+                size="sm"
+                variant={config.mode === m.value ? "default" : "secondary"}
+                className="hash-text"
+                onClick={() => set("mode", m.value)}
+              >
+                {m.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label className="label-xs" htmlFor="prefix">
+              Prefix
+            </Label>
+            <Input
+              id="prefix"
+              className="hash-text mt-2"
+              value={config.prefix}
+              onChange={(e) => set("prefix", e.target.value)}
+            />
+          </div>
+
+          {config.mode === "sequential" ? (
+            <div>
+              <Label className="label-xs" htmlFor="nonce">
+                Starting nonce
+              </Label>
+              <Input
+                id="nonce"
+                className="hash-text mt-2"
+                type="number"
+                min={0}
+                value={config.startNonce}
+                onChange={(e) => set("startNonce", Math.max(0, Number(e.target.value) || 0))}
+              />
+            </div>
+          ) : (
+            <div>
+              <Label className="label-xs" htmlFor="length">
+                Nonce length
+              </Label>
+              <Input
+                id="length"
+                className="hash-text mt-2"
+                type="number"
+                min={1}
+                max={64}
+                value={config.nonceLength}
+                onChange={(e) => set("nonceLength", Math.min(64, Math.max(1, Number(e.target.value) || 1)))}
+              />
+            </div>
+          )}
+
+          {config.mode === "custom" && (
+            <>
+              <div>
+                <Label className="label-xs" htmlFor="suffix">
+                  Suffix
+                </Label>
+                <Input
+                  id="suffix"
+                  className="hash-text mt-2"
+                  value={config.suffix}
+                  onChange={(e) => set("suffix", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className="label-xs" htmlFor="charset">
+                  Character set
+                </Label>
+                <Input
+                  id="charset"
+                  className="hash-text mt-2"
+                  value={config.charset}
+                  onChange={(e) => set("charset", e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
+          <div>
+            <Label className="label-xs" htmlFor="batch">
+              Batch size
+            </Label>
+            <Input
+              id="batch"
+              className="hash-text mt-2"
+              type="number"
+              min={1000}
+              step={1000}
+              value={config.batchSize}
+              onChange={(e) => set("batchSize", Math.max(1000, Number(e.target.value) || 1000))}
+            />
+          </div>
+
+          <div>
+            <Label className="label-xs" htmlFor="threads">
+              Threads (workers)
+            </Label>
+            <Input
+              id="threads"
+              className="hash-text mt-2"
+              type="number"
+              min={1}
+              max={32}
+              value={threads}
+              onChange={(e) => setThreads(Math.min(32, Math.max(1, Number(e.target.value) || 1)))}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 pt-1">
+          {status === "running" ? (
+            <Button className="hash-text" onClick={onPause}>
+              Pause
+            </Button>
+          ) : (
+            <Button
+              className="hash-text"
+              onClick={() => (status === "paused" ? onResume() : onStart(config, threads))}
+            >
+              {status === "paused" ? "Resume" : "Start"}
+            </Button>
+          )}
+          <Button variant="secondary" className="hash-text" onClick={onStop} disabled={status === "idle"}>
+            Stop
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
