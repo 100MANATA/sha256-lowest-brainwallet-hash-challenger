@@ -52,7 +52,14 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
                 size="sm"
                 variant={config.mode === m.value ? "default" : "secondary"}
                 className="hash-text"
-                onClick={() => set("mode", m.value)}
+                onClick={() =>
+                  // Dynamic mode searches the whole input space, so it drops the fixed prefix.
+                  setConfig((prev) => ({
+                    ...prev,
+                    mode: m.value,
+                    prefix: m.value === "dynamic" ? "" : prev.prefix,
+                  }))
+                }
               >
                 {m.label}
               </Button>
