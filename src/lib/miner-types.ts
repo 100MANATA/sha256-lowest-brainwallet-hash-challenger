@@ -53,6 +53,16 @@ export function buildInput(config: SearchConfig, nonce: string): string {
   return `${config.prefix}${nonce}${config.suffix}`;
 }
 
+/** Generate a random prefix of the given length using the default charset. */
+export function randomPrefix(length = 8): string {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  const buf = new Uint32Array(length);
+  crypto.getRandomValues(buf);
+  let out = "";
+  for (let i = 0; i < length; i++) out += chars[buf[i] % chars.length];
+  return out + ":";
+}
+
 export const CHALLENGES: Record<ChallengeMode, { label: string; description: string }> = {
   global: {
     label: "Global Record",

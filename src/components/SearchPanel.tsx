@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEFAULT_CONFIG, type SearchConfig, type SearchMode } from "@/lib/miner-types";
+import { DEFAULT_CONFIG, randomPrefix, type SearchConfig, type SearchMode } from "@/lib/miner-types";
 import type { MinerStatus } from "@/hooks/useMiner";
 
 const MODES: { value: SearchMode; label: string }[] = [
@@ -56,12 +56,25 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
             <Label className="label-xs" htmlFor="prefix">
               Prefix
             </Label>
-            <Input
-              id="prefix"
-              className="hash-text mt-2"
-              value={config.prefix}
-              onChange={(e) => set("prefix", e.target.value)}
-            />
+            <div className="mt-2 flex gap-2">
+              <Input
+                id="prefix"
+                className="hash-text"
+                value={config.prefix}
+                onChange={(e) => set("prefix", e.target.value)}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="hash-text shrink-0"
+                disabled={status === "running"}
+                onClick={() => set("prefix", randomPrefix())}
+                title="Generate a random prefix"
+              >
+                Random
+              </Button>
+            </div>
           </div>
 
           {config.mode === "sequential" ? (
