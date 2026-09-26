@@ -25,13 +25,14 @@ import { CHALLENGES, challengeId, type ChallengeMode } from "@/lib/miner-types";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SHA256 Lowest Brainwallet Hash Challenger — Find the smallest SHA-256 hash" },
+      { title: "sha256 lowest brainwallet hash challenger — find the smallest SHA-256 hash" },
       {
         name: "description",
         content:
           "A public SHA-256 competition. Search billions of inputs in your browser with Web Workers and claim the lowest 256-bit hash ever found.",
       },
-      { property: "og:title", content: "SHA256 Lowest Brainwallet Hash Challenger" },
+      { property: "og:title", content: "sha256 lowest brainwallet hash challenger" },
+
       {
         property: "og:description",
         content:
@@ -119,9 +120,10 @@ function Dashboard() {
       <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
         <header className="text-center">
           <p className="label-xs">SHA-256 · 256-bit unsigned integer race</p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">
-            SHA256 <span className="text-primary">LOWEST BRAINWALLET HASH</span> CHALLENGER
+          <h1 className="mt-3 text-3xl font-bold tracking-tight lowercase sm:text-5xl">
+            sha256 <span className="text-primary">lowest brainwallet hash</span> challenger
           </h1>
+
           <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
             Search billions of inputs. Find the smallest SHA-256 hash.
           </p>

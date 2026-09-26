@@ -78,12 +78,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "SHA256 Lowest Brainwallet Hash Challenger" },
+      { title: "sha256 lowest brainwallet hash challenger" },
       {
         name: "description",
         content: "A public SHA-256 competition to find the smallest 256-bit hash.",
       },
-      { property: "og:title", content: "SHA256 Lowest Brainwallet Hash Challenger" },
+      { property: "og:title", content: "sha256 lowest brainwallet hash challenger" },
+
       {
         property: "og:description",
         content: "A public SHA-256 competition to find the smallest 256-bit hash.",
