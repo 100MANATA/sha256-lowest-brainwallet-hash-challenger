@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sha256Hex } from "@/lib/sha256";
 import { leadingZeroBitsHex } from "@/lib/hash-utils";
 
@@ -13,6 +14,7 @@ export interface LeaderboardRow {
   hash_rate: number;
   username: string;
   created_at: string;
+  user_id: string | null;
 }
 
 const submitSchema = z.object({
@@ -50,6 +52,20 @@ export const submitRecord = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Optional account link: a valid bearer token ties the record to the signed-in miner.
+    let userId: string | null = null;
+    try {
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const auth = getRequest()?.headers.get("authorization") ?? "";
+      const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+      if (token.split(".").length === 3) {
+        const { data: u } = await supabaseAdmin.auth.getUser(token);
+        userId = u.user?.id ?? null;
+      }
+    } catch {
+      userId = null;
+    }
+
     // Atomic check-and-store: only insert when it beats the current best for
     // this challenge, and let the unique index settle simultaneous winners.
     const { data: current, error: readError } = await supabaseAdmin
@@ -74,6 +90,7 @@ export const submitRecord = createServerFn({ method: "POST" })
       hash_rate: data.hashRate,
       username: data.username,
       verified: true,
+      user_id: userId,
     });
 
     if (error && error.code !== "23505") throw new Error(error.message);
@@ -86,7 +103,7 @@ export const getLeaderboard = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("records")
-      .select("id, challenge_id, hash, input, leading_zero_bits, attempts, hash_rate, username, created_at")
+      .select("id, challenge_id, hash, input, leading_zero_bits, attempts, hash_rate, username, created_at, user_id")
       .eq("challenge_id", data.challengeId)
       .order("hash", { ascending: true })
       .limit(data.limit);
@@ -114,3 +131,32 @@ export const getGlobalStats = createServerFn({ method: "GET" }).handler(async ()
     totalRecords: count ?? 0,
   };
 });
+
+const COLS = "id, challenge_id, hash, input, leading_zero_bits, attempts, hash_rate, username, created_at, user_id";
+
+export const getMyRecords = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<LeaderboardRow[]> => {
+    const { data, error } = await context.supabase
+      .from("records")
+      .select(COLS)
+      .eq("user_id", context.userId)
+      .order("hash", { ascending: true })
+      .limit(50);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as LeaderboardRow[];
+  });
+
+export const getRecordByHash = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => z.object({ hash: z.string().regex(/^[0-9a-f]{64}$/) }).parse(data))
+  .handler(async ({ data }): Promise<LeaderboardRow | null> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row, error } = await supabaseAdmin
+      .from("records")
+      .select(COLS)
+      .eq("hash", data.hash)
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (row as LeaderboardRow | null) ?? null;
+  });

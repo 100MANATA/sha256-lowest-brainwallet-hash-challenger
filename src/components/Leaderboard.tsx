@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,13 +66,18 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
                 <tr key={row.id} className="border-t border-border/60">
                   <td className="py-2 pr-3 text-muted-foreground">{i + 1}</td>
                   <td className="max-w-40 truncate py-2 pr-3 text-foreground" title={row.input}>
-                    {row.input}
+                    <Link to="/verify" search={{ input: row.input }} className="hover:text-primary">
+                      {row.input}
+                    </Link>
                   </td>
                   <td className="py-2 pr-3 text-primary">{shortHash(row.hash, 22)}</td>
                   <td className="py-2 pr-3 text-accent">{row.leading_zero_bits}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{formatNumber(row.attempts)}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{formatHashRate(row.hash_rate)}</td>
-                  <td className="py-2 pr-3">{row.username}</td>
+                  <td className="py-2 pr-3">
+                    {row.username}
+                    {row.user_id && <span className="ml-1 text-accent" title="Registered miner">◆</span>}
+                  </td>
                   <td className="py-2 text-muted-foreground">
                     {new Date(row.created_at).toISOString().slice(0, 10)}
                   </td>

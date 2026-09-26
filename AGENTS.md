@@ -21,3 +21,4 @@
   `src/lib/leaderboard.functions.ts`, which re-hashes the input server-side before
   inserting with the admin client; the `records` table grants no client inserts so
   forged hashes cannot be published.
+- Records link to accounts via nullable `records.user_id`, set only server-side in `submitRecord` from a verified bearer token; anonymous mining stays allowed.

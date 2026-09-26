@@ -24,6 +24,7 @@ export type Database = {
           id: string
           input: string
           leading_zero_bits: number
+          user_id: string | null
           username: string
           verified: boolean
         }
@@ -36,6 +37,7 @@ export type Database = {
           id?: string
           input: string
           leading_zero_bits: number
+          user_id?: string | null
           username?: string
           verified?: boolean
         }
@@ -48,6 +50,7 @@ export type Database = {
           id?: string
           input?: string
           leading_zero_bits?: number
+          user_id?: string | null
           username?: string
           verified?: boolean
         }
