@@ -22,7 +22,9 @@ interface Props {
 export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Props) {
   const [config, setConfig] = useState<SearchConfig>(DEFAULT_CONFIG);
   const [threads, setThreads] = useState(() =>
-    typeof navigator !== "undefined" ? Math.min(4, navigator.hardwareConcurrency ?? 4) : 4,
+    typeof navigator !== "undefined"
+      ? Math.min(/Mobi|Android|iPhone/i.test(navigator.userAgent) ? 2 : 4, navigator.hardwareConcurrency ?? 4)
+      : 4,
   );
 
   const set = <K extends keyof SearchConfig>(key: K, value: SearchConfig[K]) =>
