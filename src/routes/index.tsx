@@ -81,7 +81,7 @@ function Dashboard() {
             input: record.input,
             hash: record.hash,
             attempts: record.attempts,
-            hashRate: 0,
+            hashRate: record.hashRate,
             username: username.trim() || "Anonymous",
           },
         });

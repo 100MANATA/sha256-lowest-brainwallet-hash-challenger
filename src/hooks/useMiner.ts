@@ -14,6 +14,7 @@ export interface FoundRecord {
   input: string;
   bits: number;
   attempts: number;
+  hashRate: number;
   at: number;
 }
 
@@ -113,11 +114,13 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
       // New record candidate.
       if (compareHex(msg.hash, bestHashRef.current) >= 0) return;
       bestHashRef.current = msg.hash;
+      const elapsed = accumulatedRef.current + (Date.now() - startedAtRef.current);
       const record: FoundRecord = {
         hash: msg.hash,
         input: msg.input,
         bits: msg.bits,
         attempts: hashesRef.current,
+        hashRate: elapsed > 0 ? (hashesRef.current / elapsed) * 1000 : 0,
         at: Date.now(),
       };
       setBest(record);
