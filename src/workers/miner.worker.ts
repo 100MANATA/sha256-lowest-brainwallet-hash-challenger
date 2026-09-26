@@ -1,7 +1,14 @@
 /// <reference lib="webworker" />
 import { sha256Bytes, bytesToHex } from "@/lib/sha256";
 import { compareHash, hexToBytes, leadingZeroBits } from "@/lib/hash-utils";
-import { buildInput, type SearchConfig, type WorkerInbound, type WorkerOutbound } from "@/lib/miner-types";
+import {
+  buildInput,
+  DYNAMIC_ALNUM,
+  DYNAMIC_SYMBOLS,
+  type SearchConfig,
+  type WorkerInbound,
+  type WorkerOutbound,
+} from "@/lib/miner-types";
 
 const CHUNK = 20_000;
 const encoder = new TextEncoder();
@@ -40,6 +47,13 @@ function post(msg: WorkerOutbound) {
 function nextInput(index: number): string {
   const cfg = config!;
   if (cfg.mode === "sequential") return buildInput(cfg, String(index));
+  if (cfg.mode === "dynamic") {
+    const alphabet = cfg.includeSymbols ? DYNAMIC_ALNUM + DYNAMIC_SYMBOLS : DYNAMIC_ALNUM;
+    const lo = Math.max(1, Math.min(cfg.minLength, cfg.maxLength));
+    const hi = Math.max(lo, Math.min(128, cfg.maxLength));
+    const len = lo + (randomUint() % (hi - lo + 1));
+    return buildInput(cfg, randomNonce(alphabet, len));
+  }
   const charset = cfg.charset.length > 0 ? cfg.charset : "0123456789abcdef";
   return buildInput(cfg, randomNonce(charset, Math.max(1, cfg.nonceLength)));
 }
