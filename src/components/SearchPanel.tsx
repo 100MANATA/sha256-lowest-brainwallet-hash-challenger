@@ -86,21 +86,36 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
             </div>
           </div>
 
-          {config.mode === "sequential" ? (
+          {config.mode === "sequential" && (
             <div>
               <Label className="label-xs" htmlFor="nonce">
                 Starting nonce
               </Label>
-              <Input
-                id="nonce"
-                className="hash-text mt-2"
-                type="number"
-                min={0}
-                value={config.startNonce}
-                onChange={(e) => set("startNonce", Math.max(0, Number(e.target.value) || 0))}
-              />
+              <div className="mt-2 flex gap-2">
+                <Input
+                  id="nonce"
+                  className="hash-text"
+                  type="number"
+                  min={0}
+                  value={config.startNonce}
+                  onChange={(e) => set("startNonce", Math.max(0, Number(e.target.value) || 0))}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="hash-text shrink-0"
+                  disabled={status === "running"}
+                  onClick={() => set("startNonce", randomStartNonce())}
+                  title="Pick a random starting point"
+                >
+                  Random
+                </Button>
+              </div>
             </div>
-          ) : (
+          )}
+
+          {(config.mode === "random" || config.mode === "custom") && (
             <div>
               <Label className="label-xs" htmlFor="length">
                 Nonce length
@@ -115,6 +130,65 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
                 onChange={(e) => set("nonceLength", Math.min(64, Math.max(1, Number(e.target.value) || 1)))}
               />
             </div>
+          )}
+
+          {config.mode === "dynamic" && (
+            <>
+              <div>
+                <Label className="label-xs" htmlFor="minlen">
+                  Min length
+                </Label>
+                <Input
+                  id="minlen"
+                  className="hash-text mt-2"
+                  type="number"
+                  min={1}
+                  max={128}
+                  value={config.minLength}
+                  onChange={(e) => set("minLength", Math.min(128, Math.max(1, Number(e.target.value) || 1)))}
+                />
+              </div>
+              <div>
+                <Label className="label-xs" htmlFor="maxlen">
+                  Max length
+                </Label>
+                <Input
+                  id="maxlen"
+                  className="hash-text mt-2"
+                  type="number"
+                  min={1}
+                  max={128}
+                  value={config.maxLength}
+                  onChange={(e) => set("maxLength", Math.min(128, Math.max(1, Number(e.target.value) || 1)))}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label className="label-xs">Alphabet</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={config.includeSymbols ? "default" : "secondary"}
+                    className="hash-text"
+                    onClick={() => set("includeSymbols", true)}
+                  >
+                    Letters + digits + symbols
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={config.includeSymbols ? "secondary" : "default"}
+                    className="hash-text"
+                    onClick={() => set("includeSymbols", false)}
+                  >
+                    Letters + digits
+                  </Button>
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Every attempt uses a fresh random string with a random length between min and max.
+                </p>
+              </div>
+            </>
           )}
 
           {config.mode === "custom" && (
