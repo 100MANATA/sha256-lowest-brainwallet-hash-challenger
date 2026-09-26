@@ -51,6 +51,7 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
             <thead>
               <tr className="label-xs">
                 <th className="py-2 pr-3">#</th>
+                <th className="py-2 pr-3">Input</th>
                 <th className="py-2 pr-3">Hash</th>
                 <th className="py-2 pr-3">Bits</th>
                 <th className="py-2 pr-3">Attempts</th>
@@ -63,6 +64,9 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
               {rows.map((row, i) => (
                 <tr key={row.id} className="border-t border-border/60">
                   <td className="py-2 pr-3 text-muted-foreground">{i + 1}</td>
+                  <td className="max-w-40 truncate py-2 pr-3 text-foreground" title={row.input}>
+                    {row.input}
+                  </td>
                   <td className="py-2 pr-3 text-primary">{shortHash(row.hash, 22)}</td>
                   <td className="py-2 pr-3 text-accent">{row.leading_zero_bits}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{formatNumber(row.attempts)}</td>

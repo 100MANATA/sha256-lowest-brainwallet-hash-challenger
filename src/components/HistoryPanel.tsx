@@ -53,6 +53,7 @@ export function HistoryPanel({ history }: { history: FoundRecord[] }) {
               <thead>
                 <tr className="label-xs">
                   <th className="py-2 pr-3">Time</th>
+                  <th className="py-2 pr-3">Input</th>
                   <th className="py-2 pr-3">Hash</th>
                   <th className="py-2">Bits</th>
                 </tr>
@@ -62,6 +63,9 @@ export function HistoryPanel({ history }: { history: FoundRecord[] }) {
                   <tr key={r.hash} className="border-t border-border/60">
                     <td className="py-2 pr-3 text-muted-foreground">
                       {new Date(r.at).toLocaleTimeString()}
+                    </td>
+                    <td className="max-w-36 truncate py-2 pr-3 text-foreground" title={r.input}>
+                      {r.input}
                     </td>
                     <td className="py-2 pr-3 text-primary">{shortHash(r.hash, 20)}</td>
                     <td className="py-2 text-accent">{r.bits}</td>
