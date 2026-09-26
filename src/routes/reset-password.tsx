@@ -29,7 +29,10 @@ function ResetPage() {
         onSubmit={async (e) => {
           e.preventDefault();
           const { error } = await supabase.auth.updateUser({ password });
-          if (error) return toast.error(error.message);
+          if (error) {
+            toast.error(error.message);
+            return;
+          }
           toast.success("Password updated");
           navigate({ to: "/" });
         }}
