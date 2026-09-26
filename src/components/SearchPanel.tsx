@@ -2,12 +2,19 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEFAULT_CONFIG, randomPrefix, type SearchConfig, type SearchMode } from "@/lib/miner-types";
+import {
+  DEFAULT_CONFIG,
+  randomPrefix,
+  randomStartNonce,
+  type SearchConfig,
+  type SearchMode,
+} from "@/lib/miner-types";
 import type { MinerStatus } from "@/hooks/useMiner";
 
 const MODES: { value: SearchMode; label: string }[] = [
   { value: "sequential", label: "Sequential" },
   { value: "random", label: "Random" },
+  { value: "dynamic", label: "Dynamic" },
   { value: "custom", label: "Custom" },
 ];
 
