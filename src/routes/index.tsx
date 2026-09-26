@@ -11,6 +11,12 @@ import { Leaderboard } from "@/components/Leaderboard";
 import { HashBitGrid } from "@/components/HashBitGrid";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { BenchmarkPanel } from "@/components/BenchmarkPanel";
+import { ShareRecord } from "@/components/ShareRecord";
+import { MyRecords } from "@/components/MyRecords";
+import { useAuth } from "@/hooks/useAuth";
+import { celebrate, isMuted, setMuted } from "@/lib/effects";
+import { supabase } from "@/integrations/supabase/client";
+import { Link } from "@tanstack/react-router";
 import { useMiner, type FoundRecord } from "@/hooks/useMiner";
 import { getGlobalStats, submitRecord } from "@/lib/leaderboard.functions";
 import {
@@ -59,6 +65,9 @@ function Dashboard() {
   const [username, setUsername] = useState("Anonymous");
   const [challenge, setChallenge] = useState(() => challengeId("global", ""));
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [muted, setMutedState] = useState(false);
+  useEffect(() => setMutedState(isMuted()), []);
 
   const fetchStats = useServerFn(getGlobalStats);
   const submit = useServerFn(submitRecord);
@@ -74,6 +83,7 @@ function Dashboard() {
 
   const onRecord = useCallback(
     async (record: FoundRecord) => {
+      if (record.bits >= 12) void celebrate(record.bits >= 20);
       if (record.bits < 16) return;
       try {
         const result = await submit({
@@ -88,6 +98,7 @@ function Dashboard() {
         });
         if (result.accepted) {
           toast.success(`New world record — ${result.bits} leading zero bits`);
+          void celebrate(true);
           queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
           queryClient.invalidateQueries({ queryKey: ["global-stats"] });
         }
@@ -118,6 +129,41 @@ function Dashboard() {
   return (
     <main className="grid-lines min-h-screen">
       <div className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+        <nav className="mb-6 flex items-center justify-end gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="hash-text"
+            aria-label={muted ? "Unmute sound" : "Mute sound"}
+            onClick={() => {
+              setMuted(!muted);
+              setMutedState(!muted);
+            }}
+          >
+            {muted ? "🔇 sound off" : "🔊 sound on"}
+          </Button>
+          {user ? (
+            <>
+              <span className="hash-text hidden max-w-40 truncate text-xs text-muted-foreground sm:inline">{user.email}</span>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="hash-text"
+                onClick={async () => {
+                  await queryClient.cancelQueries();
+                  await supabase.auth.signOut();
+                  queryClient.invalidateQueries();
+                }}
+              >
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <Button asChild size="sm" variant="secondary" className="hash-text">
+              <Link to="/auth">Sign in</Link>
+            </Button>
+          )}
+        </nav>
         <header className="text-center">
           <p className="label-xs">SHA-256 · 256-bit unsigned integer race</p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight lowercase sm:text-5xl">
@@ -131,10 +177,10 @@ function Dashboard() {
 
         <section className="panel mt-8 p-5 sm:p-7">
           <p className="label-xs">Current world record</p>
-          <p className="hash-text mt-3 text-base text-primary sm:text-2xl">
+          <p className="hash-text mt-3 text-sm break-all text-primary sm:text-2xl">
             {worldBest?.hash ?? "—".repeat(3)}
           </p>
-          <dl className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <dl className="mt-4 grid grid-cols-2 gap-3 sm:mt-5 sm:grid-cols-4 sm:gap-4">
             <Stat label="Leading zero bits" value={worldBest ? String(worldBits) : "0"} accent />
             <Stat label="Expected attempts" value={worldBest ? `2^${worldBits} ≈ ${expectedWork(worldBits)}` : "—"} />
             <Stat label="Found by" value={worldBest?.username ?? "Nobody yet"} />
@@ -213,6 +259,17 @@ function Dashboard() {
                 </>
               )}
             </div>
+            {miner.best && miner.best.bits >= 8 && (
+              <div className="mt-4">
+                <ShareRecord
+                  hash={miner.best.hash}
+                  input={miner.best.input}
+                  bits={miner.best.bits}
+                  username={username.trim() || "Anonymous"}
+                  at={miner.best.at}
+                />
+              </div>
+            )}
             <Button variant="secondary" size="sm" className="hash-text mt-4" onClick={miner.resetBest}>
               Reset local best
             </Button>
@@ -230,6 +287,12 @@ function Dashboard() {
           <HistoryPanel history={miner.history} />
           <BenchmarkPanel />
         </div>
+
+        {user && (
+          <div className="mt-6">
+            <MyRecords />
+          </div>
+        )}
 
         <div className="mt-6">
           <Leaderboard challengeId={challenge} />
