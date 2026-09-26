@@ -54,7 +54,17 @@ export const DEFAULT_CONFIG: SearchConfig = {
   nonceLength: 16,
   startNonce: 0,
   batchSize: 1_000_000,
+  minLength: 8,
+  maxLength: 32,
+  includeSymbols: true,
 };
+
+/** A cryptographically random starting point for sequential mode. */
+export function randomStartNonce(): number {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0]!;
+}
 
 /**
  * Canonical input construction. Every participant must build inputs exactly
