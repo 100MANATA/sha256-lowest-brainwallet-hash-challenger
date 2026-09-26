@@ -1,4 +1,4 @@
-export type SearchMode = "sequential" | "random" | "custom";
+export type SearchMode = "sequential" | "random" | "dynamic" | "custom";
 
 export type ChallengeMode = "global" | "daily" | "fixed-prefix" | "custom";
 
@@ -16,7 +16,19 @@ export interface SearchConfig {
   startNonce: number;
   /** Nonces handed to a worker per assignment. */
   batchSize: number;
+  /** Dynamic mode: shortest generated input length. */
+  minLength: number;
+  /** Dynamic mode: longest generated input length. */
+  maxLength: number;
+  /** Dynamic mode: include punctuation/symbols in the alphabet. */
+  includeSymbols: boolean;
 }
+
+/** Letters (both cases) + digits, used by dynamic mode. */
+export const DYNAMIC_ALNUM =
+  "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+/** Extra printable symbols for dynamic mode. */
+export const DYNAMIC_SYMBOLS = "!@#$%^&*()_+-=[]{}|;:,.<>?/";
 
 export interface WorkerRange {
   start: number;
