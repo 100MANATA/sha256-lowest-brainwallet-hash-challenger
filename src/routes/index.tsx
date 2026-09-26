@@ -25,13 +25,13 @@ import { CHALLENGES, challengeId, type ChallengeMode } from "@/lib/miner-types";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "SHA256 Lowest Hash Challenge — Find the smallest SHA-256 hash" },
+      { title: "SHA256 Lowest Brainwallet Hash Challenger — Find the smallest SHA-256 hash" },
       {
         name: "description",
         content:
           "A public SHA-256 competition. Search billions of inputs in your browser with Web Workers and claim the lowest 256-bit hash ever found.",
       },
-      { property: "og:title", content: "SHA256 Lowest Hash Challenge" },
+      { property: "og:title", content: "SHA256 Lowest Brainwallet Hash Challenger" },
       {
         property: "og:description",
         content:
