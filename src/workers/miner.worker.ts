@@ -1,7 +1,14 @@
 /// <reference lib="webworker" />
 import { sha256Bytes, bytesToHex } from "@/lib/sha256";
 import { compareHash, hexToBytes, leadingZeroBits } from "@/lib/hash-utils";
-import { buildInput, type SearchConfig, type WorkerInbound, type WorkerOutbound } from "@/lib/miner-types";
+import {
+  buildInput,
+  DYNAMIC_ALNUM,
+  DYNAMIC_SYMBOLS,
+  type SearchConfig,
+  type WorkerInbound,
+  type WorkerOutbound,
+} from "@/lib/miner-types";
 
 const CHUNK = 20_000;
 const encoder = new TextEncoder();
