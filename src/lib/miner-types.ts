@@ -59,7 +59,7 @@ export function randomPrefix(length = 8): string {
   const buf = new Uint32Array(length);
   crypto.getRandomValues(buf);
   let out = "";
-  for (let i = 0; i < length; i++) out += chars[buf[i] % chars.length];
+  for (let i = 0; i < length; i++) out += chars[buf[i]! % chars.length];
   return out + ":";
 }
 
