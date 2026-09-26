@@ -120,7 +120,7 @@ function Dashboard() {
         <header className="text-center">
           <p className="label-xs">SHA-256 · 256-bit unsigned integer race</p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">
-            SHA256 <span className="text-primary">LOWEST HASH</span> CHALLENGE
+            SHA256 <span className="text-primary">LOWEST BRAINWALLET HASH</span> CHALLENGER
           </h1>
           <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
             Search billions of inputs. Find the smallest SHA-256 hash.
