@@ -19,6 +19,7 @@ export type Database = {
           attempts: number
           challenge_id: string
           created_at: string
+          engine: string | null
           hash: string
           hash_rate: number
           id: string
@@ -32,6 +33,7 @@ export type Database = {
           attempts?: number
           challenge_id: string
           created_at?: string
+          engine?: string | null
           hash: string
           hash_rate?: number
           id?: string
@@ -45,6 +47,7 @@ export type Database = {
           attempts?: number
           challenge_id?: string
           created_at?: string
+          engine?: string | null
           hash?: string
           hash_rate?: number
           id?: string
