@@ -56,6 +56,17 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
   const [stats, setStats] = useState<MinerStats>(EMPTY);
   const [best, setBest] = useState<FoundRecord | null>(null);
   const [history, setHistory] = useState<FoundRecord[]>([]);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("sha256-history");
+      if (saved) setHistory(JSON.parse(saved) as FoundRecord[]);
+    } catch {
+      /* ignore corrupt storage */
+    }
+  }, []);
+  useEffect(() => {
+    if (history.length) localStorage.setItem("sha256-history", JSON.stringify(history.slice(0, 50)));
+  }, [history]);
   const [gpuError, setGpuError] = useState<string | null>(null);
 
   const workersRef = useRef<Worker[]>([]);

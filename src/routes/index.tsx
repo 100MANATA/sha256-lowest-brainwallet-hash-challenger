@@ -186,13 +186,13 @@ function Dashboard() {
         <div id="search" className="mt-6 grid gap-6 lg:grid-cols-2">
           <SearchPanel
             status={miner.status}
-            onStart={(cfg) => {
+            onStart={(cfg, threads, engine) => {
               if (!username.trim()) {
                 toast.error("Enter a miner name first");
                 document.getElementById("username")?.focus();
                 return;
               }
-              miner.start(cfg);
+              miner.start(cfg, threads, engine);
             }}
             onPause={miner.pause}
             onResume={miner.resume}
