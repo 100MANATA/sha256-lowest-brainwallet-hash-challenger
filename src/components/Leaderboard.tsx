@@ -12,8 +12,9 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
 
   const { data, isLoading } = useQuery({
     queryKey: ["leaderboard", challengeId],
-    queryFn: () => fetchLeaderboard({ data: { challengeId, limit: 20 } }),
+    queryFn: () => fetchLeaderboard({ data: { challengeId, limit: 10 } }),
     refetchOnWindowFocus: false,
+    refetchInterval: 15_000,
   });
 
   useEffect(() => {
