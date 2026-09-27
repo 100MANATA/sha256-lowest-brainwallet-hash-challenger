@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getLeaderboard } from "@/lib/leaderboard.functions";
 import { formatHashRate, formatNumber, shortHash } from "@/lib/hash-utils";
@@ -32,6 +33,16 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
 
   const rows = data ?? [];
 
+  async function shareRow(row: (typeof rows)[number]) {
+    const text = `⚡ ${row.username} found a SHA-256 hash with ${row.leading_zero_bits} leading zero bits!\n\ninput: ${row.input}\nhash: ${row.hash}\n\nThink you can go lower? Mine in your browser 👇\nhttps://sha256.world`;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied — paste it in your X post");
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  }
+
   return (
     <section className="panel p-5">
       <div className="flex items-center justify-between">
@@ -60,6 +71,7 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
                 <th className="py-2 pr-3">Rate</th>
                 <th className="py-2 pr-3">Miner</th>
                 <th className="py-2">Date</th>
+                <th className="py-2 pl-3 text-right">Post</th>
               </tr>
             </thead>
             <tbody className="hash-text">
@@ -86,6 +98,17 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
                   </td>
                   <td className="py-2 text-muted-foreground">
                     {new Date(row.created_at).toISOString().slice(0, 10)}
+                  </td>
+                  <td className="py-2 pl-3 text-right">
+                    <button
+                      type="button"
+                      aria-label={`Copy X post for ${row.username}'s record`}
+                      title="Copy ready X post"
+                      className="rounded border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      onClick={() => void shareRow(row)}
+                    >
+                      𝕏
+                    </button>
                   </td>
                 </tr>
               ))}
