@@ -281,6 +281,7 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
     bestHashRef.current = MAX_HASH_HEX;
     setBest(null);
     setHistory([]);
+    localStorage.removeItem("sha256-history");
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {
