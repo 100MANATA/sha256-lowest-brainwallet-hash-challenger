@@ -5,10 +5,12 @@ import {
   buildInput,
   DYNAMIC_ALNUM,
   DYNAMIC_SYMBOLS,
+  WORD_SEPARATORS,
   type SearchConfig,
   type WorkerInbound,
   type WorkerOutbound,
 } from "@/lib/miner-types";
+import { BIP39_WORDS } from "@/lib/bip39-words";
 
 const CHUNK = 20_000;
 const encoder = new TextEncoder();
@@ -47,6 +49,17 @@ function post(msg: WorkerOutbound) {
 function nextInput(index: number): string {
   const cfg = config!;
   if (cfg.mode === "sequential") return buildInput(cfg, String(index));
+  if (cfg.mode === "words") {
+    const lo = Math.max(1, Math.min(cfg.minWords, cfg.maxWords));
+    const hi = Math.max(lo, Math.min(20, cfg.maxWords));
+    const count = lo + (randomUint() % (hi - lo + 1));
+    const sep = WORD_SEPARATORS[cfg.wordSeparator] ?? " ";
+    let phrase = BIP39_WORDS[randomUint() % BIP39_WORDS.length]!;
+    for (let w = 1; w < count; w++) {
+      phrase += sep + BIP39_WORDS[randomUint() % BIP39_WORDS.length]!;
+    }
+    return buildInput(cfg, phrase);
+  }
   if (cfg.mode === "dynamic") {
     const alphabet = cfg.includeSymbols ? DYNAMIC_ALNUM + DYNAMIC_SYMBOLS : DYNAMIC_ALNUM;
     const lo = Math.max(1, Math.min(cfg.minLength, cfg.maxLength));
