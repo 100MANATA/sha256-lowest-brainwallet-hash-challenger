@@ -109,6 +109,59 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
+          {config.mode === "words" && (
+            <>
+              <div>
+                <Label className="label-xs" htmlFor="minwords">
+                  Min words
+                </Label>
+                <Input
+                  id="minwords"
+                  className="hash-text mt-2"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={config.minWords}
+                  onChange={(e) => set("minWords", Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
+                />
+              </div>
+              <div>
+                <Label className="label-xs" htmlFor="maxwords">
+                  Max words
+                </Label>
+                <Input
+                  id="maxwords"
+                  className="hash-text mt-2"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={config.maxWords}
+                  onChange={(e) => set("maxWords", Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label className="label-xs">Separator</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {SEPARATORS.map((s) => (
+                    <Button
+                      key={s.value}
+                      type="button"
+                      size="sm"
+                      variant={config.wordSeparator === s.value ? "default" : "secondary"}
+                      className="hash-text"
+                      onClick={() => set("wordSeparator", s.value)}
+                    >
+                      {s.label}
+                    </Button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Each attempt is a random passphrase of 1&ndash;20 words from a 2048-word English dictionary.
+                </p>
+              </div>
+            </>
+          )}
+
           <div>
             <Label className="label-xs" htmlFor="prefix">
               Prefix
@@ -239,58 +292,6 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
             </>
           )}
 
-          {config.mode === "words" && (
-            <>
-              <div>
-                <Label className="label-xs" htmlFor="minwords">
-                  Min words
-                </Label>
-                <Input
-                  id="minwords"
-                  className="hash-text mt-2"
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={config.minWords}
-                  onChange={(e) => set("minWords", Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
-                />
-              </div>
-              <div>
-                <Label className="label-xs" htmlFor="maxwords">
-                  Max words
-                </Label>
-                <Input
-                  id="maxwords"
-                  className="hash-text mt-2"
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={config.maxWords}
-                  onChange={(e) => set("maxWords", Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Label className="label-xs">Separator</Label>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {SEPARATORS.map((s) => (
-                    <Button
-                      key={s.value}
-                      type="button"
-                      size="sm"
-                      variant={config.wordSeparator === s.value ? "default" : "secondary"}
-                      className="hash-text"
-                      onClick={() => set("wordSeparator", s.value)}
-                    >
-                      {s.label}
-                    </Button>
-                  ))}
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Each attempt is a random passphrase of 1&ndash;20 words from a 2048-word English dictionary.
-                </p>
-              </div>
-            </>
-          )}
 
           {config.mode === "custom" && (
             <>
