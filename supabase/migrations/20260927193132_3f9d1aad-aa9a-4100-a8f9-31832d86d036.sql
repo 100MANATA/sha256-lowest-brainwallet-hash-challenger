@@ -1,0 +1,1 @@
+UPDATE public.records SET challenge_id = 'global-v1' WHERE challenge_id <> 'global-v1';
