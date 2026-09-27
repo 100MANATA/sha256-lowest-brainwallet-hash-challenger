@@ -13,10 +13,7 @@ import { HistoryPanel } from "@/components/HistoryPanel";
 import { BenchmarkPanel } from "@/components/BenchmarkPanel";
 import { ShareRecord } from "@/components/ShareRecord";
 import { MyRecords } from "@/components/MyRecords";
-import { useAuth } from "@/hooks/useAuth";
 import { celebrate, isMuted, setMuted } from "@/lib/effects";
-import { supabase } from "@/integrations/supabase/client";
-import { Link } from "@tanstack/react-router";
 import { useMiner, type FoundRecord } from "@/hooks/useMiner";
 import { getGlobalStats, submitRecord } from "@/lib/leaderboard.functions";
 import {
@@ -26,7 +23,6 @@ import {
   formatNumber,
   leadingZeroBitsHex,
 } from "@/lib/hash-utils";
-import { CHALLENGES, challengeId, type ChallengeMode } from "@/lib/miner-types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -61,11 +57,9 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
 }
 
 function Dashboard() {
-  const [mode, setMode] = useState<ChallengeMode>("global");
-  const [username, setUsername] = useState("Anonymous");
-  const [challenge, setChallenge] = useState(() => challengeId("global", ""));
+  const [username, setUsername] = useState("");
+  const challenge = "global-v1";
   const queryClient = useQueryClient();
-  const { user } = useAuth();
   const [muted, setMutedState] = useState(false);
   useEffect(() => setMutedState(isMuted()), []);
 
@@ -74,12 +68,9 @@ function Dashboard() {
 
   useEffect(() => {
     const saved = localStorage.getItem("sha256-username");
-    if (saved) setUsername(saved);
+    if (saved && saved !== "Anonymous") setUsername(saved);
   }, []);
 
-  useEffect(() => {
-    setChallenge(challengeId(mode, "custom"));
-  }, [mode]);
 
   const onRecord = useCallback(
     async (record: FoundRecord) => {
@@ -143,27 +134,6 @@ function Dashboard() {
           >
             {muted ? "🔇 sound off" : "🔊 sound on"}
           </Button>
-          {user ? (
-            <>
-              <span className="hash-text hidden max-w-40 truncate text-xs text-muted-foreground sm:inline">{user.email}</span>
-              <Button
-                size="sm"
-                variant="secondary"
-                className="hash-text"
-                onClick={async () => {
-                  await queryClient.cancelQueries();
-                  await supabase.auth.signOut();
-                  queryClient.invalidateQueries();
-                }}
-              >
-                Sign out
-              </Button>
-            </>
-          ) : (
-            <Button asChild size="sm" variant="secondary" className="hash-text">
-              <Link to="/auth">Sign in</Link>
-            </Button>
-          )}
         </nav>
         <header className="text-center">
           <p className="label-xs">SHA-256 · 256-bit unsigned integer race</p>
@@ -196,6 +166,7 @@ function Dashboard() {
                 id="username"
                 className="hash-text mt-2"
                 maxLength={32}
+                placeholder="your name"
                 value={username}
                 onChange={(e) => handleUsername(e.target.value)}
               />
@@ -212,25 +183,17 @@ function Dashboard() {
           </div>
         </section>
 
-        <section className="mt-6 flex flex-wrap gap-2">
-          {(Object.keys(CHALLENGES) as ChallengeMode[]).map((key) => (
-            <Button
-              key={key}
-              size="sm"
-              variant={mode === key ? "default" : "secondary"}
-              className="hash-text"
-              onClick={() => setMode(key)}
-              title={CHALLENGES[key].description}
-            >
-              {CHALLENGES[key].label}
-            </Button>
-          ))}
-        </section>
-
         <div id="search" className="mt-6 grid gap-6 lg:grid-cols-2">
           <SearchPanel
             status={miner.status}
-            onStart={miner.start}
+            onStart={(cfg) => {
+              if (!username.trim()) {
+                toast.error("Enter a miner name first");
+                document.getElementById("username")?.focus();
+                return;
+              }
+              miner.start(cfg);
+            }}
             onPause={miner.pause}
             onResume={miner.resume}
             onStop={miner.stop}
@@ -296,11 +259,9 @@ function Dashboard() {
           <BenchmarkPanel />
         </div>
 
-        {user && (
-          <div className="mt-6">
-            <MyRecords />
-          </div>
-        )}
+        <div className="mt-6">
+          <MyRecords username={username} />
+        </div>
 
         <div className="mt-6">
           <Leaderboard challengeId={challenge} />

@@ -21,5 +21,5 @@
   `src/lib/leaderboard.functions.ts`, which re-hashes the input server-side before
   inserting with the admin client; the `records` table grants no client inserts so
   forged hashes cannot be published.
-- Records link to accounts via nullable `records.user_id`, set only server-side in `submitRecord` from a verified bearer token; anonymous mining stays allowed.
+- No sign-in: miners are identified only by display name; `records.user_id` is legacy (no longer written). One competition only, challenge_id `global-v1`.
 - GPU search uses a WebGPU WGSL shader (`src/lib/gpu/`) that returns candidate inputs only; every candidate is re-hashed with JS SHA-256 before it counts, so shader bugs can't produce fake records.

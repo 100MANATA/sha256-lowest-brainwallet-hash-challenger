@@ -1,19 +1,24 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMyRecords } from "@/lib/leaderboard.functions";
+import { getRecordsByUsername } from "@/lib/leaderboard.functions";
 import { shortHash } from "@/lib/hash-utils";
 
-export function MyRecords() {
-  const fetchMine = useServerFn(getMyRecords);
-  const { data, isLoading } = useQuery({ queryKey: ["leaderboard", "mine"], queryFn: () => fetchMine() });
+export function MyRecords({ username }: { username: string }) {
+  const fetchMine = useServerFn(getRecordsByUsername);
+  const name = username.trim();
+  const { data, isLoading } = useQuery({
+    queryKey: ["leaderboard", "mine", name.toLowerCase()],
+    queryFn: () => fetchMine({ data: { username: name } }),
+    enabled: name.length > 0,
+  });
   const rows = data ?? [];
   return (
     <section className="panel p-5">
-      <h2 className="label-xs">My verified records (synced to your account)</h2>
-      {isLoading && <p className="mt-3 text-sm text-muted-foreground">Loading…</p>}
-      {!isLoading && rows.length === 0 && (
-        <p className="mt-3 text-sm text-muted-foreground">None yet — records you set while signed in appear here on every device.</p>
+      <h2 className="label-xs">My records — {name || "enter a miner name"}</h2>
+      {name && isLoading && <p className="mt-3 text-sm text-muted-foreground">Loading…</p>}
+      {name && !isLoading && rows.length === 0 && (
+        <p className="mt-3 text-sm text-muted-foreground">None yet — records submitted under this name appear here on every device.</p>
       )}
       <ul className="hash-text mt-3 space-y-2 text-sm">
         {rows.map((r) => (
