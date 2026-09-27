@@ -8,6 +8,7 @@ import {
   randomStartNonce,
   type SearchConfig,
   type SearchMode,
+  type WordSeparator,
 } from "@/lib/miner-types";
 import type { MinerStatus } from "@/hooks/useMiner";
 
@@ -15,7 +16,14 @@ const MODES: { value: SearchMode; label: string }[] = [
   { value: "sequential", label: "Sequential" },
   { value: "random", label: "Random" },
   { value: "dynamic", label: "Dynamic" },
+  { value: "words", label: "Words" },
   { value: "custom", label: "Custom" },
+];
+
+const SEPARATORS: { value: WordSeparator; label: string }[] = [
+  { value: "space", label: "Space" },
+  { value: "dash", label: "Dash" },
+  { value: "none", label: "Joined" },
 ];
 
 interface Props {
@@ -57,7 +65,7 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
                   setConfig((prev) => ({
                     ...prev,
                     mode: m.value,
-                    prefix: m.value === "dynamic" ? "" : prev.prefix,
+                    prefix: m.value === "dynamic" || m.value === "words" ? "" : prev.prefix,
                   }))
                 }
               >
@@ -193,6 +201,59 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
                   Every attempt uses a fresh random string with a random length between min and max.
+                </p>
+              </div>
+            </>
+          )}
+
+          {config.mode === "words" && (
+            <>
+              <div>
+                <Label className="label-xs" htmlFor="minwords">
+                  Min words
+                </Label>
+                <Input
+                  id="minwords"
+                  className="hash-text mt-2"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={config.minWords}
+                  onChange={(e) => set("minWords", Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
+                />
+              </div>
+              <div>
+                <Label className="label-xs" htmlFor="maxwords">
+                  Max words
+                </Label>
+                <Input
+                  id="maxwords"
+                  className="hash-text mt-2"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={config.maxWords}
+                  onChange={(e) => set("maxWords", Math.min(20, Math.max(1, Number(e.target.value) || 1)))}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label className="label-xs">Separator</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {SEPARATORS.map((s) => (
+                    <Button
+                      key={s.value}
+                      type="button"
+                      size="sm"
+                      variant={config.wordSeparator === s.value ? "default" : "secondary"}
+                      className="hash-text"
+                      onClick={() => set("wordSeparator", s.value)}
+                    >
+                      {s.label}
+                    </Button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Each attempt is a random passphrase of 1&ndash;20 words from a 2048-word English dictionary.
                 </p>
               </div>
             </>
