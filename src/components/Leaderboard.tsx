@@ -78,6 +78,11 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
                   <td className="py-2 pr-3">
                     {row.username}
                     {row.user_id && <span className="ml-1 text-accent" title="Registered miner">◆</span>}
+                    {row.engine && (
+                      <span className="ml-1 rounded bg-surface-2 px-1 text-[10px] uppercase text-muted-foreground">
+                        {row.engine}
+                      </span>
+                    )}
                   </td>
                   <td className="py-2 text-muted-foreground">
                     {new Date(row.created_at).toISOString().slice(0, 10)}

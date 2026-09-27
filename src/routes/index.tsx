@@ -94,6 +94,7 @@ function Dashboard() {
             attempts: record.attempts,
             hashRate: record.hashRate,
             username: username.trim() || "Anonymous",
+            engine: record.engine,
           },
         });
         if (result.accepted) {
@@ -234,6 +235,7 @@ function Dashboard() {
             onResume={miner.resume}
             onStop={miner.stop}
           />
+          {miner.gpuError && <p className="text-sm text-destructive lg:col-span-2">{miner.gpuError}</p>}
 
           <section className="panel p-5">
             <div className="flex items-center justify-between">
@@ -245,6 +247,12 @@ function Dashboard() {
               <Stat label="Attempts" value={formatNumber(miner.stats.hashes)} />
               <Stat label="Elapsed" value={formatDuration(miner.stats.elapsedMs)} />
               <Stat label="Workers" value={String(miner.stats.threads)} />
+              {miner.stats.gpuActive && (
+                <>
+                  <Stat label="GPU rate" value={formatHashRate(miner.stats.gpuHashRate)} />
+                  <Stat label="CPU rate" value={formatHashRate(miner.stats.cpuHashRate)} />
+                </>
+              )}
             </dl>
 
             <div className="mt-5 space-y-2">

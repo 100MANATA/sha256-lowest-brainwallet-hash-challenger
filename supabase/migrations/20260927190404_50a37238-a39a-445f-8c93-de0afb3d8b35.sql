@@ -1,0 +1,1 @@
+ALTER TABLE public.records ADD COLUMN engine text CHECK (engine IN ('cpu','gpu'));

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { isWebGpuAvailable } from "@/lib/gpu/gpu-miner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +11,7 @@ import {
   type SearchMode,
   type WordSeparator,
 } from "@/lib/miner-types";
-import type { MinerStatus } from "@/hooks/useMiner";
+import type { Engine, MinerStatus } from "@/hooks/useMiner";
 
 const MODES: { value: SearchMode; label: string }[] = [
   { value: "sequential", label: "Sequential" },
@@ -28,7 +29,7 @@ const SEPARATORS: { value: WordSeparator; label: string }[] = [
 
 interface Props {
   status: MinerStatus;
-  onStart: (config: SearchConfig, threads: number) => void;
+  onStart: (config: SearchConfig, threads: number, engine: Engine) => void;
   onPause: () => void;
   onResume: () => void;
   onStop: () => void;
@@ -42,6 +43,12 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
       : 4,
   );
 
+  const [engine, setEngine] = useState<Engine>("cpu");
+  const [gpuOk, setGpuOk] = useState<boolean | null>(null);
+  useEffect(() => {
+    void isWebGpuAvailable().then(setGpuOk);
+  }, []);
+
   const set = <K extends keyof SearchConfig>(key: K, value: SearchConfig[K]) =>
     setConfig((prev) => ({ ...prev, [key]: value }));
 
@@ -50,6 +57,32 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
       <h2 className="label-xs">Search engine</h2>
 
       <div className="mt-4 space-y-4">
+        <div>
+          <Label className="label-xs">Engine</Label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {(["cpu", "gpu", "both"] as Engine[]).map((e) => (
+              <Button
+                key={e}
+                type="button"
+                size="sm"
+                variant={engine === e ? "default" : "secondary"}
+                className="hash-text"
+                disabled={status !== "idle" || (e !== "cpu" && gpuOk !== true)}
+                onClick={() => setEngine(e)}
+              >
+                {e === "cpu" ? "CPU" : e === "gpu" ? "GPU" : "CPU + GPU"}
+              </Button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            {gpuOk === false
+              ? "Your browser doesn't support WebGPU — try Chrome or Edge for graphics-card search."
+              : gpuOk
+                ? "Your graphics card is available (WebGPU) — typically 10–100× faster than CPU."
+                : "Checking for a graphics card…"}
+          </p>
+        </div>
+
         <div>
           <Label className="label-xs">Mode</Label>
           <div className="mt-2 flex flex-wrap gap-2">
@@ -325,7 +358,7 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
           ) : (
             <Button
               className="hash-text"
-              onClick={() => (status === "paused" ? onResume() : onStart(config, threads))}
+              onClick={() => (status === "paused" ? onResume() : onStart(config, threads, engine))}
             >
               {status === "paused" ? "Resume" : "Start"}
             </Button>
