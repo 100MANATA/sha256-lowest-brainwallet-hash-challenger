@@ -8,6 +8,7 @@ import {
   randomStartNonce,
   type SearchConfig,
   type SearchMode,
+  type WordSeparator,
 } from "@/lib/miner-types";
 import type { MinerStatus } from "@/hooks/useMiner";
 
@@ -15,7 +16,14 @@ const MODES: { value: SearchMode; label: string }[] = [
   { value: "sequential", label: "Sequential" },
   { value: "random", label: "Random" },
   { value: "dynamic", label: "Dynamic" },
+  { value: "words", label: "Words" },
   { value: "custom", label: "Custom" },
+];
+
+const SEPARATORS: { value: WordSeparator; label: string }[] = [
+  { value: "space", label: "Space" },
+  { value: "dash", label: "Dash" },
+  { value: "none", label: "Joined" },
 ];
 
 interface Props {
@@ -57,7 +65,7 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
                   setConfig((prev) => ({
                     ...prev,
                     mode: m.value,
-                    prefix: m.value === "dynamic" ? "" : prev.prefix,
+                    prefix: m.value === "dynamic" || m.value === "words" ? "" : prev.prefix,
                   }))
                 }
               >
