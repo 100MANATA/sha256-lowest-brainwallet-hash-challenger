@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { sha256Hex } from "@/lib/sha256";
 import { leadingZeroBitsHex } from "@/lib/hash-utils";
 
@@ -54,20 +53,6 @@ export const submitRecord = createServerFn({ method: "POST" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Optional account link: a valid bearer token ties the record to the signed-in miner.
-    let userId: string | null = null;
-    try {
-      const { getRequest } = await import("@tanstack/react-start/server");
-      const auth = getRequest()?.headers.get("authorization") ?? "";
-      const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-      if (token.split(".").length === 3) {
-        const { data: u } = await supabaseAdmin.auth.getUser(token);
-        userId = u.user?.id ?? null;
-      }
-    } catch {
-      userId = null;
-    }
-
     // Atomic check-and-store: only insert when it beats the current best for
     // this challenge, and let the unique index settle simultaneous winners.
     const { data: current, error: readError } = await supabaseAdmin
@@ -92,7 +77,6 @@ export const submitRecord = createServerFn({ method: "POST" })
       hash_rate: data.hashRate,
       username: data.username,
       verified: true,
-      user_id: userId,
       engine: data.engine ?? null,
     });
 
@@ -137,17 +121,19 @@ export const getGlobalStats = createServerFn({ method: "GET" }).handler(async ()
 
 const COLS = "id, challenge_id, hash, input, leading_zero_bits, attempts, hash_rate, username, created_at, user_id, engine";
 
-export const getMyRecords = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<LeaderboardRow[]> => {
-    const { data, error } = await context.supabase
+export const getRecordsByUsername = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => z.object({ username: z.string().trim().min(1).max(32) }).parse(data))
+  .handler(async ({ data }): Promise<LeaderboardRow[]> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
       .from("records")
       .select(COLS)
-      .eq("user_id", context.userId)
+      .eq("verified", true)
+      .ilike("username", data.username.replace(/[%_\\]/g, "\\$&"))
       .order("hash", { ascending: true })
       .limit(50);
     if (error) throw new Error(error.message);
-    return (data ?? []) as LeaderboardRow[];
+    return (rows ?? []) as LeaderboardRow[];
   });
 
 export const getRecordByHash = createServerFn({ method: "GET" })
