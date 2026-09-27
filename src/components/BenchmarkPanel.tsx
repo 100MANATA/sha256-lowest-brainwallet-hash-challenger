@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_CONFIG } from "@/lib/miner-types";
+import { runGpuBenchmark } from "@/lib/gpu/gpu-miner";
 import { runBenchmark, type BenchmarkResult } from "@/lib/benchmark";
 import { formatHashRate } from "@/lib/hash-utils";
 
 export function BenchmarkPanel() {
   const [results, setResults] = useState<BenchmarkResult[]>([]);
   const [running, setRunning] = useState(false);
+  const [gpu, setGpu] = useState<string | null>(null);
   const cores = typeof navigator !== "undefined" ? (navigator.hardwareConcurrency ?? 4) : 4;
 
   async function handleRun() {
     setRunning(true);
     setResults([]);
+    setGpu(null);
     const plan = [1, Math.max(2, Math.floor(cores / 2)), cores].filter(
       (v, i, arr) => arr.indexOf(v) === i,
     );
@@ -20,6 +24,8 @@ export function BenchmarkPanel() {
       collected.push(result);
       setResults([...collected]);
     }
+    const g = await runGpuBenchmark(DEFAULT_CONFIG);
+    setGpu(g ? `${formatHashRate(g.hashRate)}` : "not available");
     setRunning(false);
   }
 
@@ -60,6 +66,12 @@ export function BenchmarkPanel() {
               <span className="hash-text text-primary">{formatHashRate(r.hashRate)}</span>
             </li>
           ))}
+          {gpu && (
+            <li className="flex items-center justify-between rounded-md bg-surface-2 px-3 py-2 text-sm">
+              <span className="hash-text text-muted-foreground">GPU (WebGPU)</span>
+              <span className="hash-text text-accent">{gpu}</span>
+            </li>
+          )}
         </ul>
       )}
       {results.length === 0 && !running && (

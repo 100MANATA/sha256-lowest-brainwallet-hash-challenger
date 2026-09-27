@@ -15,6 +15,7 @@ export interface LeaderboardRow {
   username: string;
   created_at: string;
   user_id: string | null;
+  engine: string | null;
 }
 
 const submitSchema = z.object({
@@ -24,6 +25,7 @@ const submitSchema = z.object({
   attempts: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
   hashRate: z.number().min(0).max(1e12),
   username: z.string().trim().min(1).max(32).default("Anonymous"),
+  engine: z.enum(["cpu", "gpu"]).optional(),
 });
 
 const listSchema = z.object({
@@ -91,6 +93,7 @@ export const submitRecord = createServerFn({ method: "POST" })
       username: data.username,
       verified: true,
       user_id: userId,
+      engine: data.engine ?? null,
     });
 
     if (error && error.code !== "23505") throw new Error(error.message);
@@ -103,7 +106,7 @@ export const getLeaderboard = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: rows, error } = await supabaseAdmin
       .from("records")
-      .select("id, challenge_id, hash, input, leading_zero_bits, attempts, hash_rate, username, created_at, user_id")
+      .select("id, challenge_id, hash, input, leading_zero_bits, attempts, hash_rate, username, created_at, user_id, engine")
       .eq("challenge_id", data.challengeId)
       .order("hash", { ascending: true })
       .limit(data.limit);
@@ -132,7 +135,7 @@ export const getGlobalStats = createServerFn({ method: "GET" }).handler(async ()
   };
 });
 
-const COLS = "id, challenge_id, hash, input, leading_zero_bits, attempts, hash_rate, username, created_at, user_id";
+const COLS = "id, challenge_id, hash, input, leading_zero_bits, attempts, hash_rate, username, created_at, user_id, engine";
 
 export const getMyRecords = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
