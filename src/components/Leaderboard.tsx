@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getLeaderboard } from "@/lib/leaderboard.functions";
 import { formatHashRate, formatNumber, shortHash } from "@/lib/hash-utils";
@@ -31,6 +32,16 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
   }, [challengeId, queryClient]);
 
   const rows = data ?? [];
+
+  async function shareRow(row: (typeof rows)[number]) {
+    const text = `⚡ ${row.username} found a SHA-256 hash with ${row.leading_zero_bits} leading zero bits!\n\ninput: ${row.input}\nhash: ${row.hash}\n\nThink you can go lower? Mine in your browser 👇\nhttps://sha256.world`;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Copied — paste it in your X post");
+    } catch {
+      toast.error("Could not copy to clipboard");
+    }
+  }
 
   return (
     <section className="panel p-5">
