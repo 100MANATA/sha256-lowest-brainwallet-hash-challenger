@@ -146,6 +146,29 @@ function Dashboard() {
           </p>
         </header>
 
+        <section className="panel mt-8 p-5 sm:p-7" aria-label="How it works">
+          <h2 className="label-xs">How it works</h2>
+          <ol className="mt-3 grid gap-2 text-sm text-muted-foreground sm:gap-3">
+            <li>
+              <span className="text-foreground">1. Pick an input</span> — any text: a word, a passphrase, random
+              characters, or dictionary words. The search modes below generate them for you.
+            </li>
+            <li>
+              <span className="text-foreground">2. SHA-256 turns it into a 256-bit number</span> — a fingerprint that
+              is unpredictable: change one letter and the whole hash changes.
+            </li>
+            <li>
+              <span className="text-foreground">3. Goal: the smallest hash</span> — the winner is the input whose
+              SHA-256 value is the lowest number. In practice you hunt for hashes starting with the most zeros — each
+              extra zero bit is twice as hard.
+            </li>
+            <li>
+              <span className="text-foreground">4. Verified, not trusted</span> — your browser does the hashing (CPU +
+              GPU). A record is published only after the server re-computes the hash itself.
+            </li>
+          </ol>
+        </section>
+
         <section className="panel mt-8 p-5 sm:p-7">
           <p className="label-xs">Current world record</p>
           <p className="hash-text mt-3 text-sm break-all text-primary sm:text-2xl">
