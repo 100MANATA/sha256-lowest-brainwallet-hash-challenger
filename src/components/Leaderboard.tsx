@@ -71,6 +71,7 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
                 <th className="py-2 pr-3">Rate</th>
                 <th className="py-2 pr-3">Miner</th>
                 <th className="py-2">Date</th>
+                <th className="py-2 pl-3 text-right">Post</th>
               </tr>
             </thead>
             <tbody className="hash-text">
