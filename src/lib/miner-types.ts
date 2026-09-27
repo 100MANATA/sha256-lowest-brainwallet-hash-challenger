@@ -1,4 +1,12 @@
-export type SearchMode = "sequential" | "random" | "dynamic" | "custom";
+export type SearchMode = "sequential" | "random" | "dynamic" | "words" | "custom";
+
+export type WordSeparator = "space" | "dash" | "none";
+
+export const WORD_SEPARATORS: Record<WordSeparator, string> = {
+  space: " ",
+  dash: "-",
+  none: "",
+};
 
 export type ChallengeMode = "global" | "daily" | "fixed-prefix" | "custom";
 
@@ -22,6 +30,12 @@ export interface SearchConfig {
   maxLength: number;
   /** Dynamic mode: include punctuation/symbols in the alphabet. */
   includeSymbols: boolean;
+  /** Words mode: fewest dictionary words per passphrase. */
+  minWords: number;
+  /** Words mode: most dictionary words per passphrase. */
+  maxWords: number;
+  /** Words mode: how words are joined. */
+  wordSeparator: WordSeparator;
 }
 
 /** Letters (both cases) + digits, used by dynamic mode. */
@@ -57,6 +71,9 @@ export const DEFAULT_CONFIG: SearchConfig = {
   minLength: 8,
   maxLength: 32,
   includeSymbols: true,
+  minWords: 1,
+  maxWords: 12,
+  wordSeparator: "space",
 };
 
 /** A cryptographically random starting point for sequential mode. */
