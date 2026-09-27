@@ -98,6 +98,17 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
                   <td className="py-2 text-muted-foreground">
                     {new Date(row.created_at).toISOString().slice(0, 10)}
                   </td>
+                  <td className="py-2 pl-3 text-right">
+                    <button
+                      type="button"
+                      aria-label={`Copy X post for ${row.username}'s record`}
+                      title="Copy ready X post"
+                      className="rounded border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      onClick={() => void shareRow(row)}
+                    >
+                      𝕏
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
