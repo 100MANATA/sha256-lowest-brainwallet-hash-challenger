@@ -23,6 +23,30 @@ let range: { start: number; end: number } | null = null;
 let cursor = 0;
 let pendingHashes = 0;
 
+/** Optional vanity target: full bytes plus an optional trailing high nibble. */
+let vanity: { bytes: Uint8Array; nibble: number | null } | null = null;
+
+function setVanity(hex: string) {
+  const clean = hex.toLowerCase().replace(/[^0-9a-f]/g, "").slice(0, 12);
+  if (!clean) {
+    vanity = null;
+    return;
+  }
+  const pairs = clean.length >> 1;
+  const bytes = hexToBytes(clean.slice(0, pairs * 2));
+  const nibble = clean.length % 2 === 1 ? parseInt(clean[clean.length - 1]!, 16) : null;
+  vanity = { bytes, nibble };
+}
+
+function matchVanity(d: Uint8Array): boolean {
+  const v = vanity!;
+  for (let i = 0; i < v.bytes.length; i++) {
+    if (d[i] !== v.bytes[i]) return false;
+  }
+  if (v.nibble !== null && (d[v.bytes.length]! >> 4) !== v.nibble) return false;
+  return true;
+}
+
 const randomBuf = new Uint32Array(64);
 let randomIdx = randomBuf.length;
 
@@ -78,6 +102,9 @@ function runChunk() {
   for (let i = cursor; i < limit; i++) {
     const input = nextInput(i);
     sha256Bytes(encoder.encode(input), digest);
+    if (vanity && matchVanity(digest)) {
+      post({ type: "vanity", input, hash: bytesToHex(digest) });
+    }
     if (compareHash(digest, best) < 0) {
       best = digest.slice();
       post({
