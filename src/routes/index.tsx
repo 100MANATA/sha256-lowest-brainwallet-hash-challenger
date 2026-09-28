@@ -62,7 +62,11 @@ function Dashboard() {
   const challenge = "global-v1";
   const queryClient = useQueryClient();
   const [muted, setMutedState] = useState(false);
-  useEffect(() => setMutedState(isMuted()), []);
+  const [eco, setEco] = useState(false);
+  useEffect(() => {
+    setMutedState(isMuted());
+    setEco(localStorage.getItem("sha256-eco") === "1");
+  }, []);
 
   const fetchStats = useServerFn(getGlobalStats);
   const submit = useServerFn(submitRecord);
