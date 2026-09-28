@@ -67,10 +67,19 @@ const EMPTY: MinerStats = {
   gpuActive: false,
 };
 
+export interface VanityHit {
+  input: string;
+  hash: string;
+  at: number;
+}
+
 export function useMiner(onRecord?: (record: FoundRecord) => void) {
   const [status, setStatus] = useState<MinerStatus>("idle");
   const [stats, setStats] = useState<MinerStats>(EMPTY);
   const [best, setBest] = useState<FoundRecord | null>(null);
+  const [vanityHits, setVanityHits] = useState<VanityHit[]>([]);
+  const [lowPower, setLowPowerState] = useState(false);
+  const setLowPower = useCallback((v: boolean) => setLowPowerState(v), []);
   const [history, setHistory] = useState<FoundRecord[]>([]);
   useEffect(() => {
     try {
@@ -152,6 +161,35 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
 
   useEffect(() => terminateAll, [terminateAll]);
 
+  // Keep the screen (and the search) alive while mining, when the browser allows it.
+  useEffect(() => {
+    if (status !== "running") return;
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: string) => Promise<{ release: () => Promise<void> }> } };
+    let sentinel: { release: () => Promise<void> } | null = null;
+    let cancelled = false;
+    const acquire = async () => {
+      if (!nav.wakeLock || sentinel) return;
+      try {
+        const s = await nav.wakeLock.request("screen");
+        if (cancelled) void s.release().catch(() => undefined);
+        else sentinel = s;
+      } catch {
+        /* wake lock unavailable or denied */
+      }
+    };
+    void acquire();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void acquire();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      void sentinel?.release().catch(() => undefined);
+      sentinel = null;
+    };
+  }, [status]);
+
   useEffect(() => {
     if (status !== "running") return;
     const id = window.setInterval(() => {
@@ -167,9 +205,9 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
         cpuHashRate: elapsed > 0 ? ((total - gpuH) / elapsed) * 1000 : 0,
         gpuActive: gpuRef.current !== null,
       }));
-    }, 400);
+    }, lowPower ? 2500 : 400);
     return () => window.clearInterval(id);
-  }, [status]);
+  }, [status, lowPower]);
 
   const allocate = useCallback((count: number) => {
     const start = nextNonceRef.current;
@@ -223,6 +261,14 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
         assignRange(worker);
         return;
       }
+      if (msg.type === "vanity") {
+        setVanityHits((prev) =>
+          prev.some((h) => h.hash === msg.hash)
+            ? prev
+            : [{ input: msg.input, hash: msg.hash, at: Date.now() }, ...prev].slice(0, 20),
+        );
+        return;
+      }
       acceptRecord(msg.hash, msg.input, msg.bits, "cpu");
     },
     [assignRange, acceptRecord],
@@ -264,32 +310,41 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
       startedAtRef.current = Date.now();
       setGpuError(null);
 
-      const useCpu = engine !== "gpu";
-      const count = useCpu ? Math.max(1, Math.min(threads, 32)) : 0;
-      engineRef.current = engine;
-      setStats({ ...EMPTY, threads: count });
+      const cpuCount = Math.max(1, Math.min(threads, 32));
+      const spawnCpu = () => {
+        for (let i = 0; i < cpuCount; i++) {
+          const worker = createWorker();
+          worker.onmessage = (event: MessageEvent<WorkerOutbound>) => handleMessage(worker, event.data);
+          worker.postMessage({ type: "config", config, best: bestHashRef.current } satisfies WorkerInbound);
+          workersRef.current.push(worker);
+        }
+        setStats((prev) => ({ ...prev, threads: cpuCount }));
+      };
 
-      for (let i = 0; i < count; i++) {
-        const worker = createWorker();
-        worker.onmessage = (event: MessageEvent<WorkerOutbound>) => handleMessage(worker, event.data);
-        worker.postMessage({ type: "config", config, best: bestHashRef.current } satisfies WorkerInbound);
-        workersRef.current.push(worker);
-      }
+      const useCpu = engine !== "gpu";
+      engineRef.current = engine;
+      setStats({ ...EMPTY, threads: useCpu ? cpuCount : 0 });
+      if (useCpu) spawnCpu();
 
       gpuEnabledRef.current = engine !== "cpu";
       if (gpuEnabledRef.current) {
-        void GpuMiner.create().then((gpu) => {
-          if (!gpu) {
-            setGpuError("Your browser doesn't support WebGPU");
-            return;
-          }
-          if (!gpuEnabledRef.current) {
-            gpu.destroy();
-            return;
-          }
-          gpuRef.current = gpu;
-          startGpu();
-        });
+        void GpuMiner.create()
+          .catch(() => null)
+          .then((gpu) => {
+            if (!gpuEnabledRef.current) {
+              gpu?.destroy();
+              return;
+            }
+            if (!gpu) {
+              // No usable graphics card: keep searching on the processor instead of stopping.
+              engineRef.current = "cpu";
+              if (!useCpu) spawnCpu();
+              setGpuError("Graphics-card search isn't available on this device — switched to processor search.");
+              return;
+            }
+            gpuRef.current = gpu;
+            startGpu();
+          });
       }
       setStatus("running");
     },
@@ -333,5 +388,20 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
     }
   }, []);
 
-  return { status, stats, best, history, gpuError, start, pause, resume, stop, resetBest, setUsername };
+  return {
+    status,
+    stats,
+    best,
+    history,
+    gpuError,
+    vanityHits,
+    lowPower,
+    setLowPower,
+    start,
+    pause,
+    resume,
+    stop,
+    resetBest,
+    setUsername,
+  };
 }

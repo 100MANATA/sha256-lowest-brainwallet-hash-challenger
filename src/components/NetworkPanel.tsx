@@ -12,7 +12,27 @@ function Stat({ label, value, accent }: { label: string; value: string; accent?:
   );
 }
 
-export function NetworkPanel({ myHashRate }: { myHashRate: number }) {
+/** Human ETA from seconds, up to years. */
+function formatEta(seconds: number): string {
+  if (!isFinite(seconds) || seconds <= 0) return "—";
+  const units: [number, string][] = [
+    [60, "sec"],
+    [60, "min"],
+    [24, "hours"],
+    [365, "days"],
+  ];
+  let v = seconds;
+  let label = "sec";
+  for (const [div, next] of units) {
+    if (v < div) break;
+    v /= div;
+    label = next;
+  }
+  if (v >= 1000 && label === "years") return `${v.toExponential(1)} years`;
+  return `${v < 10 ? v.toFixed(1) : Math.round(v)} ${label === "sec" ? "seconds" : label === "min" ? "minutes" : label}`;
+}
+
+export function NetworkPanel({ myHashRate, recordBits }: { myHashRate: number; recordBits: number }) {
   const fetchStats = useServerFn(getNetworkStats);
   const { data } = useQuery({
     queryKey: ["network-stats"],
@@ -21,9 +41,12 @@ export function NetworkPanel({ myHashRate }: { myHashRate: number }) {
   });
 
   const share =
-    data && data.totalHashRate > 0 && myHashRate > 0
-      ? (myHashRate / data.totalHashRate) * 100
-      : null;
+    data && data.totalHashRate > 0 && myHashRate > 0 ? (myHashRate / data.totalHashRate) * 100 : null;
+
+  // Expected attempts to beat the current record by one bit: 2^(bits+1).
+  const nextBits = recordBits > 0 ? recordBits + 1 : 0;
+  const eta =
+    data && data.totalHashRate > 0 && nextBits > 0 ? 2 ** nextBits / data.totalHashRate : null;
 
   return (
     <section className="panel mt-6 p-5 sm:p-7" aria-label="Network hashrate">
@@ -35,11 +58,15 @@ export function NetworkPanel({ myHashRate }: { myHashRate: number }) {
         <Stat label="Active miners" value={data ? String(data.activeMiners) : "—"} accent />
         <Stat label="CPU power" value={data ? formatHashRate(data.cpuHashRate) : "—"} />
         <Stat label="GPU power" value={data ? formatHashRate(data.gpuHashRate) : "—"} />
-        <Stat
-          label="Your share"
-          value={share !== null ? `${share < 0.1 ? "<0.1" : share.toFixed(1)}%` : "—"}
-        />
+        <Stat label="Your share" value={share !== null ? `${share < 0.1 ? "<0.1" : share.toFixed(1)}%` : "—"} />
       </dl>
+      <div className="mt-5 border-t border-border/60 pt-4">
+        <p className="label-xs">Estimated time to the next record ({nextBits > 0 ? `${nextBits} bits` : "—"})</p>
+        <p className="hash-text mt-1 text-lg text-accent">{eta !== null ? formatEta(eta) : "—"}</p>
+        <p className="label-xs mt-1">
+          At the combined speed above — every extra zero bit doubles the work.
+        </p>
+      </div>
       <p className="label-xs mt-4">Combined speed of everyone searching right now · updates every 15s</p>
     </section>
   );

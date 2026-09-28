@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getLeaderboard } from "@/lib/leaderboard.functions";
 import { formatHashRate, formatNumber, shortHash } from "@/lib/hash-utils";
+import { Badges } from "@/components/Badges";
 
 export function Leaderboard({ challengeId }: { challengeId: string }) {
   const fetchLeaderboard = useServerFn(getLeaderboard);
@@ -32,6 +33,22 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
   }, [challengeId, queryClient]);
 
   const rows = data ?? [];
+  const top = rows[0];
+
+  // Flash a banner the moment somebody takes over the top spot.
+  const seenTop = useRef<string | null>(null);
+  const [flash, setFlash] = useState<{ username: string; bits: number } | null>(null);
+  useEffect(() => {
+    if (!top) return undefined;
+    if (seenTop.current && seenTop.current !== top.hash) {
+      setFlash({ username: top.username, bits: top.leading_zero_bits });
+      seenTop.current = top.hash;
+      const t = window.setTimeout(() => setFlash(null), 12_000);
+      return () => window.clearTimeout(t);
+    }
+    seenTop.current = top.hash;
+    return undefined;
+  }, [top]);
 
   async function shareRow(row: (typeof rows)[number]) {
     const text = `⚡ ${row.username} found a SHA-256 hash with ${row.leading_zero_bits} leading zero bits!\n\ninput: ${row.input}\nhash: ${row.hash}\n\nThink you can go lower? Mine in your browser 👇\nhttps://sha256.world`;
@@ -49,6 +66,12 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
         <h2 className="label-xs">Global leaderboard</h2>
         <span className="label-xs">{challengeId}</span>
       </div>
+
+      {flash && (
+        <div className="animate-fade-in pulse mt-4 rounded-md border border-primary/60 bg-primary/10 px-4 py-3 text-sm text-primary">
+          ⚡ New world record — {flash.username} just found {flash.bits} leading zero bits!
+        </div>
+      )}
 
       {isLoading && <p className="mt-4 text-sm text-muted-foreground">Loading records…</p>}
 
@@ -89,7 +112,7 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
                   <td className="py-2 pr-3 text-muted-foreground">{formatHashRate(row.hash_rate)}</td>
                   <td className="py-2 pr-3">
                     {row.username}
-                    
+                    <Badges bits={row.leading_zero_bits} engine={row.engine} input={row.input} />
                     {row.engine && (
                       <span className="ml-1 rounded bg-surface-2 px-1 text-[10px] uppercase text-muted-foreground">
                         {row.engine}

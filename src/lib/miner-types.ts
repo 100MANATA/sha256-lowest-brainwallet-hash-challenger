@@ -36,6 +36,8 @@ export interface SearchConfig {
   maxWords: number;
   /** Words mode: how words are joined. */
   wordSeparator: WordSeparator;
+  /** Optional hex pattern the hash must start with (vanity hunt). Empty = off. */
+  vanityHex: string;
 }
 
 /** Letters (both cases) + digits, used by dynamic mode. */
@@ -58,7 +60,8 @@ export type WorkerInbound =
 export type WorkerOutbound =
   | { type: "idle" }
   | { type: "progress"; hashes: number }
-  | { type: "record"; input: string; hash: string; bits: number };
+  | { type: "record"; input: string; hash: string; bits: number }
+  | { type: "vanity"; input: string; hash: string };
 
 export const DEFAULT_CONFIG: SearchConfig = {
   mode: "sequential",
@@ -74,6 +77,7 @@ export const DEFAULT_CONFIG: SearchConfig = {
   minWords: 1,
   maxWords: 12,
   wordSeparator: "space",
+  vanityHex: "",
 };
 
 /** A cryptographically random starting point for sequential mode. */

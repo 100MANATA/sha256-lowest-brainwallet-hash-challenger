@@ -23,6 +23,7 @@ import {
   formatHashRate,
   formatNumber,
   leadingZeroBitsHex,
+  shortHash,
 } from "@/lib/hash-utils";
 
 export const Route = createFileRoute("/")({
@@ -62,7 +63,11 @@ function Dashboard() {
   const challenge = "global-v1";
   const queryClient = useQueryClient();
   const [muted, setMutedState] = useState(false);
-  useEffect(() => setMutedState(isMuted()), []);
+  const [eco, setEco] = useState(false);
+  useEffect(() => {
+    setMutedState(isMuted());
+    setEco(localStorage.getItem("sha256-eco") === "1");
+  }, []);
 
   const fetchStats = useServerFn(getGlobalStats);
   const submit = useServerFn(submitRecord);
@@ -75,7 +80,7 @@ function Dashboard() {
 
   const onRecord = useCallback(
     async (record: FoundRecord) => {
-      if (record.bits >= 12) void celebrate(record.bits >= 20);
+      if (!eco && record.bits >= 12) void celebrate(record.bits >= 20);
       if (record.bits < 16) return;
       try {
         const result = await submit({
@@ -91,7 +96,7 @@ function Dashboard() {
         });
         if (result.accepted) {
           toast.success(`New world record — ${result.bits} leading zero bits`);
-          void celebrate(true);
+          if (!eco) void celebrate(true);
           queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
           queryClient.invalidateQueries({ queryKey: ["global-stats"] });
         }
@@ -99,7 +104,7 @@ function Dashboard() {
         /* submission failures must never interrupt the local search */
       }
     },
-    [challenge, queryClient, submit, username],
+    [challenge, eco, queryClient, submit, username],
   );
 
   const miner = useMiner(onRecord);
@@ -108,6 +113,11 @@ function Dashboard() {
     miner.setUsername(username);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    miner.setLowPower(eco);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eco]);
 
   const { data: stats } = useQuery({
     queryKey: ["global-stats"],
@@ -140,6 +150,20 @@ function Dashboard() {
             }}
           >
             {muted ? "🔇 sound off" : "🔊 sound on"}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="hash-text"
+            aria-label={eco ? "Turn off eco mode" : "Turn on eco mode"}
+            title="Eco mode hides animations and slows screen updates so all power goes to searching"
+            onClick={() => {
+              const next = !eco;
+              setEco(next);
+              localStorage.setItem("sha256-eco", next ? "1" : "0");
+            }}
+          >
+            {eco ? "🌙 eco on" : "🌙 eco off"}
           </Button>
         </nav>
         <header className="text-center">
@@ -213,7 +237,7 @@ function Dashboard() {
           </div>
         </section>
 
-        <NetworkPanel myHashRate={miner.stats.hashRate} />
+        <NetworkPanel myHashRate={miner.stats.hashRate} recordBits={worldBits} />
 
         <div id="search" className="mt-6 grid gap-6 lg:grid-cols-2">
           <SearchPanel
@@ -230,7 +254,7 @@ function Dashboard() {
             onResume={miner.resume}
             onStop={miner.stop}
           />
-          {miner.gpuError && <p className="text-sm text-destructive lg:col-span-2">{miner.gpuError}</p>}
+          {miner.gpuError && <p className="text-sm text-muted-foreground lg:col-span-2">{miner.gpuError}</p>}
 
           <section className="panel p-5">
             <div className="flex items-center justify-between">
@@ -279,12 +303,28 @@ function Dashboard() {
           </section>
         </div>
 
-        <section className="panel mt-6 p-5">
-          <h2 className="label-xs">256-bit hash pattern</h2>
-          <div className="mt-4">
-            <HashBitGrid hash={displayHash} />
-          </div>
-        </section>
+        {miner.vanityHits.length > 0 && (
+          <section className="panel mt-6 p-5">
+            <h2 className="label-xs">Vanity hits — hashes matching your pattern</h2>
+            <ul className="hash-text mt-3 space-y-2 text-sm">
+              {miner.vanityHits.map((h) => (
+                <li key={h.hash} className="flex flex-wrap gap-x-3 border-t border-border/60 pt-2">
+                  <span className="text-primary">{shortHash(h.hash, 20)}</span>
+                  <span className="max-w-64 truncate text-muted-foreground">{h.input}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {!eco && (
+          <section className="panel mt-6 p-5">
+            <h2 className="label-xs">256-bit hash pattern</h2>
+            <div className="mt-4">
+              <HashBitGrid hash={displayHash} />
+            </div>
+          </section>
+        )}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <HistoryPanel history={miner.history} />

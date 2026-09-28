@@ -1,0 +1,1 @@
+UPDATE public.records SET username = 'tishoy' WHERE username = 'Anonymous' AND created_at < '2026-09-27';

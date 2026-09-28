@@ -320,6 +320,25 @@ export function SearchPanel({ status, onStart, onPause, onResume, onStop }: Prop
             </>
           )}
 
+          <div className="sm:col-span-2">
+            <Label className="label-xs" htmlFor="vanity">
+              Vanity hash pattern (optional)
+            </Label>
+            <Input
+              id="vanity"
+              className="hash-text mt-2"
+              placeholder="cafe"
+              maxLength={12}
+              value={config.vanityHex}
+              onChange={(e) => set("vanityHex", e.target.value.toLowerCase().replace(/[^0-9a-f]/g, "").slice(0, 12))}
+            />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Hunt hashes that start with these hex characters (0&ndash;9, a&ndash;f), e.g. <span className="hash-text">cafe</span> or{" "}
+              <span className="hash-text">dead</span>. Hits are listed separately and do not affect the record race. Runs
+              on the processor only.
+            </p>
+          </div>
+
           <div>
             <Label className="label-xs" htmlFor="batch">
               Batch size
