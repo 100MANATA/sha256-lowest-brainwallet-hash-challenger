@@ -266,6 +266,7 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
 
       const useCpu = engine !== "gpu";
       const count = useCpu ? Math.max(1, Math.min(threads, 32)) : 0;
+      engineRef.current = engine;
       setStats({ ...EMPTY, threads: count });
 
       for (let i = 0; i < count; i++) {
@@ -332,5 +333,5 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
     }
   }, []);
 
-  return { status, stats, best, history, gpuError, start, pause, resume, stop, resetBest };
+  return { status, stats, best, history, gpuError, start, pause, resume, stop, resetBest, setUsername };
 }
