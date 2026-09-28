@@ -23,6 +23,7 @@ import {
   formatHashRate,
   formatNumber,
   leadingZeroBitsHex,
+  shortHash,
 } from "@/lib/hash-utils";
 
 export const Route = createFileRoute("/")({
