@@ -33,6 +33,21 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
   }, [challengeId, queryClient]);
 
   const rows = data ?? [];
+  const top = rows[0];
+
+  // Flash a banner the moment somebody takes over the top spot.
+  const seenTop = useRef<string | null>(null);
+  const [flash, setFlash] = useState<{ username: string; bits: number } | null>(null);
+  useEffect(() => {
+    if (!top) return;
+    if (seenTop.current && seenTop.current !== top.hash) {
+      setFlash({ username: top.username, bits: top.leading_zero_bits });
+      seenTop.current = top.hash;
+      const t = window.setTimeout(() => setFlash(null), 12_000);
+      return () => window.clearTimeout(t);
+    }
+    seenTop.current = top.hash;
+  }, [top]);
 
   async function shareRow(row: (typeof rows)[number]) {
     const text = `⚡ ${row.username} found a SHA-256 hash with ${row.leading_zero_bits} leading zero bits!\n\ninput: ${row.input}\nhash: ${row.hash}\n\nThink you can go lower? Mine in your browser 👇\nhttps://sha256.world`;
