@@ -205,9 +205,9 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
         cpuHashRate: elapsed > 0 ? ((total - gpuH) / elapsed) * 1000 : 0,
         gpuActive: gpuRef.current !== null,
       }));
-    }, 400);
+    }, lowPower ? 2500 : 400);
     return () => window.clearInterval(id);
-  }, [status]);
+  }, [status, lowPower]);
 
   const allocate = useCallback((count: number) => {
     const start = nextNonceRef.current;
