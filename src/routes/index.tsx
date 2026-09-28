@@ -13,6 +13,7 @@ import { HistoryPanel } from "@/components/HistoryPanel";
 import { BenchmarkPanel } from "@/components/BenchmarkPanel";
 import { ShareRecord } from "@/components/ShareRecord";
 import { MyRecords } from "@/components/MyRecords";
+import { NetworkPanel } from "@/components/NetworkPanel";
 import { celebrate, isMuted, setMuted } from "@/lib/effects";
 import { useMiner, type FoundRecord } from "@/hooks/useMiner";
 import { getGlobalStats, submitRecord } from "@/lib/leaderboard.functions";
@@ -115,6 +116,7 @@ function Dashboard() {
 
   function handleUsername(value: string) {
     setUsername(value);
+    miner.setUsername(value);
     localStorage.setItem("sha256-username", value.slice(0, 32));
   }
 
