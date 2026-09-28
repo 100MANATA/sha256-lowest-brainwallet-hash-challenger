@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      heartbeats: {
+        Row: {
+          engine: string | null
+          hash_rate: number
+          session_id: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          engine?: string | null
+          hash_rate?: number
+          session_id: string
+          updated_at?: string
+          username?: string
+        }
+        Update: {
+          engine?: string | null
+          hash_rate?: number
+          session_id?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
       records: {
         Row: {
           attempts: number
