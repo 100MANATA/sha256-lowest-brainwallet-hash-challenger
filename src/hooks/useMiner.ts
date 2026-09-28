@@ -67,10 +67,19 @@ const EMPTY: MinerStats = {
   gpuActive: false,
 };
 
+export interface VanityHit {
+  input: string;
+  hash: string;
+  at: number;
+}
+
 export function useMiner(onRecord?: (record: FoundRecord) => void) {
   const [status, setStatus] = useState<MinerStatus>("idle");
   const [stats, setStats] = useState<MinerStats>(EMPTY);
   const [best, setBest] = useState<FoundRecord | null>(null);
+  const [vanityHits, setVanityHits] = useState<VanityHit[]>([]);
+  const [lowPower, setLowPowerState] = useState(false);
+  const setLowPower = useCallback((v: boolean) => setLowPowerState(v), []);
   const [history, setHistory] = useState<FoundRecord[]>([]);
   useEffect(() => {
     try {
@@ -151,6 +160,35 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
   }, []);
 
   useEffect(() => terminateAll, [terminateAll]);
+
+  // Keep the screen (and the search) alive while mining, when the browser allows it.
+  useEffect(() => {
+    if (status !== "running") return;
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: string) => Promise<{ release: () => Promise<void> }> } };
+    let sentinel: { release: () => Promise<void> } | null = null;
+    let cancelled = false;
+    const acquire = async () => {
+      if (!nav.wakeLock || sentinel) return;
+      try {
+        const s = await nav.wakeLock.request("screen");
+        if (cancelled) void s.release().catch(() => undefined);
+        else sentinel = s;
+      } catch {
+        /* wake lock unavailable or denied */
+      }
+    };
+    void acquire();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void acquire();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", onVisible);
+      void sentinel?.release().catch(() => undefined);
+      sentinel = null;
+    };
+  }, [status]);
 
   useEffect(() => {
     if (status !== "running") return;
