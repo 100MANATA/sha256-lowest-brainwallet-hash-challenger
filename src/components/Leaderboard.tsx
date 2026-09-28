@@ -66,6 +66,12 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
         <span className="label-xs">{challengeId}</span>
       </div>
 
+      {flash && (
+        <div className="animate-fade-in pulse mt-4 rounded-md border border-primary/60 bg-primary/10 px-4 py-3 text-sm text-primary">
+          ⚡ New world record — {flash.username} just found {flash.bits} leading zero bits!
+        </div>
+      )}
+
       {isLoading && <p className="mt-4 text-sm text-muted-foreground">Loading records…</p>}
 
       {!isLoading && rows.length === 0 && (
@@ -105,7 +111,7 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
                   <td className="py-2 pr-3 text-muted-foreground">{formatHashRate(row.hash_rate)}</td>
                   <td className="py-2 pr-3">
                     {row.username}
-                    
+                    <Badges bits={row.leading_zero_bits} engine={row.engine} input={row.input} />
                     {row.engine && (
                       <span className="ml-1 rounded bg-surface-2 px-1 text-[10px] uppercase text-muted-foreground">
                         {row.engine}
