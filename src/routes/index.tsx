@@ -13,6 +13,7 @@ import { HistoryPanel } from "@/components/HistoryPanel";
 import { BenchmarkPanel } from "@/components/BenchmarkPanel";
 import { ShareRecord } from "@/components/ShareRecord";
 import { MyRecords } from "@/components/MyRecords";
+import { NetworkPanel } from "@/components/NetworkPanel";
 import { celebrate, isMuted, setMuted } from "@/lib/effects";
 import { useMiner, type FoundRecord } from "@/hooks/useMiner";
 import { getGlobalStats, submitRecord } from "@/lib/leaderboard.functions";
@@ -103,6 +104,11 @@ function Dashboard() {
 
   const miner = useMiner(onRecord);
 
+  useEffect(() => {
+    miner.setUsername(username);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { data: stats } = useQuery({
     queryKey: ["global-stats"],
     queryFn: () => fetchStats({}),
@@ -115,6 +121,7 @@ function Dashboard() {
 
   function handleUsername(value: string) {
     setUsername(value);
+    miner.setUsername(value);
     localStorage.setItem("sha256-username", value.slice(0, 32));
   }
 
@@ -205,6 +212,8 @@ function Dashboard() {
             </Button>
           </div>
         </section>
+
+        <NetworkPanel myHashRate={miner.stats.hashRate} />
 
         <div id="search" className="mt-6 grid gap-6 lg:grid-cols-2">
           <SearchPanel

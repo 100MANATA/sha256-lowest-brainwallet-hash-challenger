@@ -2,12 +2,28 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { compareHex, leadingZeroBits, MAX_HASH_HEX } from "@/lib/hash-utils";
 import { bytesToHex, sha256Bytes } from "@/lib/sha256";
 import { GpuMiner } from "@/lib/gpu/gpu-miner";
+import { reportHeartbeat } from "@/lib/network.functions";
 import {
   DEFAULT_CONFIG,
   type SearchConfig,
   type WorkerInbound,
   type WorkerOutbound,
 } from "@/lib/miner-types";
+
+const SESSION_KEY = "sha256-session-id";
+
+function getSessionId(): string {
+  try {
+    let id = localStorage.getItem(SESSION_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(SESSION_KEY, id);
+    }
+    return id;
+  } catch {
+    return "no-storage-session";
+  }
+}
 
 export type MinerStatus = "idle" | "running" | "paused";
 export type Engine = "cpu" | "gpu" | "both";
@@ -95,6 +111,33 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
       /* ignore corrupt storage */
     }
   }, []);
+
+  const usernameRef = useRef("Anonymous");
+  const setUsername = useCallback((name: string) => {
+    usernameRef.current = name.trim() || "Anonymous";
+  }, []);
+
+  const engineRef = useRef<Engine>("cpu");
+
+  // While searching, report our hash rate so the network panel can sum all miners.
+  useEffect(() => {
+    if (status !== "running") return;
+    const beat = () => {
+      const elapsed = accumulatedRef.current + (Date.now() - startedAtRef.current);
+      const rate = elapsed > 0 ? (hashesRef.current / elapsed) * 1000 : 0;
+      void reportHeartbeat({
+        data: {
+          sessionId: getSessionId(),
+          username: usernameRef.current,
+          hashRate: rate,
+          engine: engineRef.current,
+        },
+      }).catch(() => undefined);
+    };
+    beat();
+    const id = window.setInterval(beat, 15_000);
+    return () => window.clearInterval(id);
+  }, [status]);
 
   const terminateAll = useCallback(() => {
     for (const w of workersRef.current) {
@@ -223,6 +266,7 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
 
       const useCpu = engine !== "gpu";
       const count = useCpu ? Math.max(1, Math.min(threads, 32)) : 0;
+      engineRef.current = engine;
       setStats({ ...EMPTY, threads: count });
 
       for (let i = 0; i < count; i++) {
@@ -289,5 +333,5 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
     }
   }, []);
 
-  return { status, stats, best, history, gpuError, start, pause, resume, stop, resetBest };
+  return { status, stats, best, history, gpuError, start, pause, resume, stop, resetBest, setUsername };
 }
