@@ -23,3 +23,7 @@
   forged hashes cannot be published.
 - No sign-in: miners are identified only by display name; `records.user_id` is legacy (no longer written). One competition only, challenge_id `global-v1`.
 - GPU search uses a WebGPU WGSL shader (`src/lib/gpu/`) that returns candidate inputs only; every candidate is re-hashed with JS SHA-256 before it counts, so shader bugs can't produce fake records.
+- Vanity pattern hits are a side channel: CPU workers post them as a separate `vanity`
+  message and they never enter the record race, so the lowest-hash rule stays intact.
+- Badge labels are derived, not stored: `src/lib/badges.ts` computes them from a record's
+  bits/engine/input, so no schema change is needed to add or retune a badge.
