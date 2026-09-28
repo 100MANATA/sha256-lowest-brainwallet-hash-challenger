@@ -236,7 +236,7 @@ function Dashboard() {
           </div>
         </section>
 
-        <NetworkPanel myHashRate={miner.stats.hashRate} />
+        <NetworkPanel myHashRate={miner.stats.hashRate} recordBits={worldBits} />
 
         <div id="search" className="mt-6 grid gap-6 lg:grid-cols-2">
           <SearchPanel
@@ -253,7 +253,7 @@ function Dashboard() {
             onResume={miner.resume}
             onStop={miner.stop}
           />
-          {miner.gpuError && <p className="text-sm text-destructive lg:col-span-2">{miner.gpuError}</p>}
+          {miner.gpuError && <p className="text-sm text-muted-foreground lg:col-span-2">{miner.gpuError}</p>}
 
           <section className="panel p-5">
             <div className="flex items-center justify-between">
@@ -302,12 +302,28 @@ function Dashboard() {
           </section>
         </div>
 
-        <section className="panel mt-6 p-5">
-          <h2 className="label-xs">256-bit hash pattern</h2>
-          <div className="mt-4">
-            <HashBitGrid hash={displayHash} />
-          </div>
-        </section>
+        {miner.vanityHits.length > 0 && (
+          <section className="panel mt-6 p-5">
+            <h2 className="label-xs">Vanity hits — hashes matching your pattern</h2>
+            <ul className="hash-text mt-3 space-y-2 text-sm">
+              {miner.vanityHits.map((h) => (
+                <li key={h.hash} className="flex flex-wrap gap-x-3 border-t border-border/60 pt-2">
+                  <span className="text-primary">{shortHash(h.hash, 20)}</span>
+                  <span className="max-w-64 truncate text-muted-foreground">{h.input}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {!eco && (
+          <section className="panel mt-6 p-5">
+            <h2 className="label-xs">256-bit hash pattern</h2>
+            <div className="mt-4">
+              <HashBitGrid hash={displayHash} />
+            </div>
+          </section>
+        )}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <HistoryPanel history={miner.history} />
