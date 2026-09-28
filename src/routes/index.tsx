@@ -150,6 +150,20 @@ function Dashboard() {
           >
             {muted ? "🔇 sound off" : "🔊 sound on"}
           </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="hash-text"
+            aria-label={eco ? "Turn off eco mode" : "Turn on eco mode"}
+            title="Eco mode hides animations and slows screen updates so all power goes to searching"
+            onClick={() => {
+              const next = !eco;
+              setEco(next);
+              localStorage.setItem("sha256-eco", next ? "1" : "0");
+            }}
+          >
+            {eco ? "🌙 eco on" : "🌙 eco off"}
+          </Button>
         </nav>
         <header className="text-center">
           <p className="label-xs">SHA-256 · 256-bit unsigned integer race</p>
