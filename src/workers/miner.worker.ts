@@ -135,6 +135,7 @@ self.onmessage = (event: MessageEvent<WorkerInbound>) => {
   switch (msg.type) {
     case "config":
       config = msg.config;
+      setVanity(msg.config.vanityHex ?? "");
       best = hexToBytes(msg.best);
       running = true;
       post({ type: "idle" });
