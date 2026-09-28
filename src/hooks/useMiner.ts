@@ -310,32 +310,41 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
       startedAtRef.current = Date.now();
       setGpuError(null);
 
-      const useCpu = engine !== "gpu";
-      const count = useCpu ? Math.max(1, Math.min(threads, 32)) : 0;
-      engineRef.current = engine;
-      setStats({ ...EMPTY, threads: count });
+      const cpuCount = Math.max(1, Math.min(threads, 32));
+      const spawnCpu = () => {
+        for (let i = 0; i < cpuCount; i++) {
+          const worker = createWorker();
+          worker.onmessage = (event: MessageEvent<WorkerOutbound>) => handleMessage(worker, event.data);
+          worker.postMessage({ type: "config", config, best: bestHashRef.current } satisfies WorkerInbound);
+          workersRef.current.push(worker);
+        }
+        setStats((prev) => ({ ...prev, threads: cpuCount }));
+      };
 
-      for (let i = 0; i < count; i++) {
-        const worker = createWorker();
-        worker.onmessage = (event: MessageEvent<WorkerOutbound>) => handleMessage(worker, event.data);
-        worker.postMessage({ type: "config", config, best: bestHashRef.current } satisfies WorkerInbound);
-        workersRef.current.push(worker);
-      }
+      const useCpu = engine !== "gpu";
+      engineRef.current = engine;
+      setStats({ ...EMPTY, threads: useCpu ? cpuCount : 0 });
+      if (useCpu) spawnCpu();
 
       gpuEnabledRef.current = engine !== "cpu";
       if (gpuEnabledRef.current) {
-        void GpuMiner.create().then((gpu) => {
-          if (!gpu) {
-            setGpuError("Your browser doesn't support WebGPU");
-            return;
-          }
-          if (!gpuEnabledRef.current) {
-            gpu.destroy();
-            return;
-          }
-          gpuRef.current = gpu;
-          startGpu();
-        });
+        void GpuMiner.create()
+          .catch(() => null)
+          .then((gpu) => {
+            if (!gpuEnabledRef.current) {
+              gpu?.destroy();
+              return;
+            }
+            if (!gpu) {
+              // No usable graphics card: keep searching on the processor instead of stopping.
+              engineRef.current = "cpu";
+              if (!useCpu) spawnCpu();
+              setGpuError("Graphics-card search isn't available on this device — switched to processor search.");
+              return;
+            }
+            gpuRef.current = gpu;
+            startGpu();
+          });
       }
       setStatus("running");
     },
