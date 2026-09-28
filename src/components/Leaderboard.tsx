@@ -39,7 +39,7 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
   const seenTop = useRef<string | null>(null);
   const [flash, setFlash] = useState<{ username: string; bits: number } | null>(null);
   useEffect(() => {
-    if (!top) return;
+    if (!top) return undefined;
     if (seenTop.current && seenTop.current !== top.hash) {
       setFlash({ username: top.username, bits: top.leading_zero_bits });
       seenTop.current = top.hash;
@@ -47,6 +47,7 @@ export function Leaderboard({ challengeId }: { challengeId: string }) {
       return () => window.clearTimeout(t);
     }
     seenTop.current = top.hash;
+    return undefined;
   }, [top]);
 
   async function shareRow(row: (typeof rows)[number]) {
