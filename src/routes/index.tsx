@@ -79,7 +79,7 @@ function Dashboard() {
 
   const onRecord = useCallback(
     async (record: FoundRecord) => {
-      if (record.bits >= 12) void celebrate(record.bits >= 20);
+      if (!eco && record.bits >= 12) void celebrate(record.bits >= 20);
       if (record.bits < 16) return;
       try {
         const result = await submit({
@@ -95,7 +95,7 @@ function Dashboard() {
         });
         if (result.accepted) {
           toast.success(`New world record — ${result.bits} leading zero bits`);
-          void celebrate(true);
+          if (!eco) void celebrate(true);
           queryClient.invalidateQueries({ queryKey: ["leaderboard"] });
           queryClient.invalidateQueries({ queryKey: ["global-stats"] });
         }
@@ -103,7 +103,7 @@ function Dashboard() {
         /* submission failures must never interrupt the local search */
       }
     },
-    [challenge, queryClient, submit, username],
+    [challenge, eco, queryClient, submit, username],
   );
 
   const miner = useMiner(onRecord);
@@ -112,6 +112,11 @@ function Dashboard() {
     miner.setUsername(username);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    miner.setLowPower(eco);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eco]);
 
   const { data: stats } = useQuery({
     queryKey: ["global-stats"],
