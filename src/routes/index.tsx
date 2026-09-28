@@ -104,6 +104,11 @@ function Dashboard() {
 
   const miner = useMiner(onRecord);
 
+  useEffect(() => {
+    miner.setUsername(username);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { data: stats } = useQuery({
     queryKey: ["global-stats"],
     queryFn: () => fetchStats({}),
@@ -207,6 +212,8 @@ function Dashboard() {
             </Button>
           </div>
         </section>
+
+        <NetworkPanel myHashRate={miner.stats.hashRate} />
 
         <div id="search" className="mt-6 grid gap-6 lg:grid-cols-2">
           <SearchPanel
