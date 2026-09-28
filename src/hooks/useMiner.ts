@@ -261,6 +261,14 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
         assignRange(worker);
         return;
       }
+      if (msg.type === "vanity") {
+        setVanityHits((prev) =>
+          prev.some((h) => h.hash === msg.hash)
+            ? prev
+            : [{ input: msg.input, hash: msg.hash, at: Date.now() }, ...prev].slice(0, 20),
+        );
+        return;
+      }
       acceptRecord(msg.hash, msg.input, msg.bits, "cpu");
     },
     [assignRange, acceptRecord],
