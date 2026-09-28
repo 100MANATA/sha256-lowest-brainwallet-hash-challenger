@@ -388,5 +388,20 @@ export function useMiner(onRecord?: (record: FoundRecord) => void) {
     }
   }, []);
 
-  return { status, stats, best, history, gpuError, start, pause, resume, stop, resetBest, setUsername };
+  return {
+    status,
+    stats,
+    best,
+    history,
+    gpuError,
+    vanityHits,
+    lowPower,
+    setLowPower,
+    start,
+    pause,
+    resume,
+    stop,
+    resetBest,
+    setUsername,
+  };
 }
