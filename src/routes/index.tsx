@@ -27,6 +27,7 @@ import {
 } from "@/lib/hash-utils";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "sha256 lowest brainwallet hash challenger — find the smallest SHA-256 hash" },
