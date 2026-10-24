@@ -176,7 +176,7 @@ function Dashboard() {
           <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
             Search billions of inputs. Find the smallest SHA-256 hash.
           </p>
-          <p className="hash-text mx-auto mt-3 max-w-xl text-xs text-accent">
+          <p className="mx-auto mt-3 max-w-xl text-xs text-accent">
             🔒 No wallets, no keys, no deposits — just a free hashing game. Nothing you type is stored as a wallet.
           </p>
         </header>
