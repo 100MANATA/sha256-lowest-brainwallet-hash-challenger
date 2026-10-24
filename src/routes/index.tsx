@@ -27,6 +27,7 @@ import {
 } from "@/lib/hash-utils";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "sha256 lowest brainwallet hash challenger — find the smallest SHA-256 hash" },
@@ -175,7 +176,26 @@ function Dashboard() {
           <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
             Search billions of inputs. Find the smallest SHA-256 hash.
           </p>
+          <p className="hash-text mx-auto mt-3 max-w-xl text-xs text-accent">
+            🔒 No wallets, no keys, no deposits — just a free hashing game. Nothing you type is stored as a wallet.
+          </p>
         </header>
+
+        {worldBest && (
+          <button
+            type="button"
+            onClick={() => document.getElementById("search")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            className="panel mt-6 block w-full border-primary/60 p-4 text-center transition-colors hover:border-primary"
+          >
+            <span className="hash-text text-lg font-bold text-primary sm:text-2xl">
+              Beat the 2^{worldBits} record
+            </span>
+            <span className="mt-1 block text-sm text-muted-foreground">
+              Last record: {worldBest.created_at.slice(0, 10)} by {worldBest.username} — the top spot is open. Start
+              mining ↓
+            </span>
+          </button>
+        )}
 
         <section className="panel mt-8 p-5 sm:p-7" aria-label="How it works">
           <h2 className="label-xs">How it works</h2>

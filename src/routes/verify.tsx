@@ -11,6 +11,7 @@ import { leadingZeroBitsHex, formatNumber } from "@/lib/hash-utils";
 import { getRecordByHash } from "@/lib/leaderboard.functions";
 
 export const Route = createFileRoute("/verify")({
+  staticData: { sitemap: true },
   validateSearch: (s) => z.object({ input: z.string().max(512).optional() }).parse(s),
   head: () => ({
     meta: [
